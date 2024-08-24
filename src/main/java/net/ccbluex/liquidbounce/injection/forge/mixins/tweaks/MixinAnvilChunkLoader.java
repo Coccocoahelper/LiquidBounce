@@ -7,7 +7,7 @@ package net.ccbluex.liquidbounce.injection.forge.mixins.tweaks;
 
 import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.world.chunk..ThreadedAnvilChunkStorage;
+import net.minecraft.world.chunk.ThreadedAnvilChunkStorage;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;

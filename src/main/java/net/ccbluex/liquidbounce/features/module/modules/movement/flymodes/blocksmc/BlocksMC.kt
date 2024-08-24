@@ -36,7 +36,7 @@ import net.minecraft.world.World
  * Caution: Prolonged flying over long distances is not recommended.
  *
  * Additionally, ensure that you avoid flight before you got flagged or
- * (S08 Packet) teleported, as this will flag u more, or you can wait till
+ * (S08 Packet) teleported, as this will flag you more, or you can wait till
  * you get the Fly message Line(153). Also avoid flying too many times (At long distance).
  *
  * @author EclipsesDev
