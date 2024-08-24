@@ -21,7 +21,7 @@ import net.ccbluex.liquidbounce.utils.render.animation.AnimationUtil.debugFPS
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowShader
 import net.ccbluex.liquidbounce.value.*
 import net.minecraft.client.gui.ChatScreen
-import net.minecraft.entity.EntityLivingBase
+import net.minecraft.entity.LivingEntity
 import net.minecraft.util.ResourceLocation
 import org.lwjgl.opengl.GL11.*
 import java.awt.Color
@@ -76,7 +76,7 @@ class Target : Element() {
 
     private val decimalFormat = DecimalFormat("##0.00", DecimalFormatSymbols(Locale.ENGLISH))
     private var easingHealth = 0F
-    private var lastTarget: EntityLivingBase? = null
+    private var lastTarget: LivingEntity? = null
 
     private var width = 0f
     private var height = 0f

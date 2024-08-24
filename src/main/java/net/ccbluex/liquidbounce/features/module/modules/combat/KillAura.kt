@@ -43,15 +43,15 @@ import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawPlatform
 import net.ccbluex.liquidbounce.utils.timing.MSTimer
 import net.ccbluex.liquidbounce.utils.timing.TimeUtils.randomClickDelay
 import net.ccbluex.liquidbounce.value.*
-import net.minecraft.client.gui.inventory.GuiContainer
+import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.enchantment.EnchantmentHelper
 import net.minecraft.entity.Entity
-import net.minecraft.entity.EntityLivingBase
+import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.item.EntityArmorStand
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.item.ItemAxe
 import net.minecraft.item.ItemSword
-import net.minecraft.network.handshake.client.C00Handshake
+import net.minecraft.network.packet.c2s.handshake.HandshakeC2SPacket
 import net.minecraft.network.play.client.C02PacketUseEntity
 import net.minecraft.network.play.client.C02PacketUseEntity.Action.*
 import net.minecraft.network.play.client.C07PacketPlayerDigging
@@ -347,7 +347,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
      */
 
     // Target
-    var target: EntityLivingBase? = null
+    var target: LivingEntity? = null
     private var hittable = false
     private val prevTargetEntities = mutableListOf<Int>()
 
@@ -399,7 +399,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
     }
 
     fun update() {
-        if (cancelRun || (noInventoryAttack && (mc.currentScreen is GuiContainer || System.currentTimeMillis() - containerOpen < noInventoryDelay))) return
+        if (cancelRun || (noInventoryAttack && (mc.currentScreen is HandledScreen || System.currentTimeMillis() - containerOpen < noInventoryDelay))) return
 
         // Update target
         updateTarget()
@@ -439,10 +439,10 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
             return
         }
 
-        if (noInventoryAttack && (mc.currentScreen is GuiContainer || System.currentTimeMillis() - containerOpen < noInventoryDelay)) {
+        if (noInventoryAttack && (mc.currentScreen is HandledScreen || System.currentTimeMillis() - containerOpen < noInventoryDelay)) {
             target = null
             hittable = false
-            if (mc.currentScreen is GuiContainer) containerOpen = System.currentTimeMillis()
+            if (mc.currentScreen is HandledScreen) containerOpen = System.currentTimeMillis()
             return
         }
 
@@ -523,10 +523,10 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
             return
         }
 
-        if (noInventoryAttack && (mc.currentScreen is GuiContainer || System.currentTimeMillis() - containerOpen < noInventoryDelay)) {
+        if (noInventoryAttack && (mc.currentScreen is HandledScreen || System.currentTimeMillis() - containerOpen < noInventoryDelay)) {
             target = null
             hittable = false
-            if (mc.currentScreen is GuiContainer) containerOpen = System.currentTimeMillis()
+            if (mc.currentScreen is HandledScreen) containerOpen = System.currentTimeMillis()
             return
         }
 
@@ -618,7 +618,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
                             val entity = it.entityHit
 
                             // Use own function instead of clickMouse() to maintain keep sprint, auto block, etc
-                            if (entity is EntityLivingBase) {
+                            if (entity is LivingEntity) {
                                 attackEntity(entity, isLastClick)
                             }
                         } else {
@@ -646,7 +646,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
                 for (entity in theWorld.loadedEntityList) {
                     val distance = thePlayer.getDistanceToEntityBox(entity)
 
-                    if (entity is EntityLivingBase && isEnemy(entity) && distance <= getRange(entity)) {
+                    if (entity is LivingEntity && isEnemy(entity) && distance <= getRange(entity)) {
                         attackEntity(entity, isLastClick)
 
                         targets += 1
@@ -689,13 +689,13 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
         val switchMode = targetMode == "Switch"
 
         // Find possible targets
-        val targets = mutableListOf<EntityLivingBase>()
+        val targets = mutableListOf<LivingEntity>()
 
         val theWorld = mc.theWorld
         val thePlayer = mc.thePlayer
 
         for (entity in theWorld.loadedEntityList) {
-            if (entity !is EntityLivingBase || !isEnemy(entity) || (switchMode && entity.entityId in prevTargetEntities)) continue
+            if (entity !is LivingEntity || !isEnemy(entity) || (switchMode && entity.entityId in prevTargetEntities)) continue
 
             // Will skip new target nearby if fail to hit/couldn't be hit.
             // Since without this check, it seems killaura (Switch) will get stuck.
@@ -794,7 +794,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
     /**
      * Attack [entity]
      */
-    private fun attackEntity(entity: EntityLivingBase, isLastClick: Boolean) {
+    private fun attackEntity(entity: LivingEntity, isLastClick: Boolean) {
         // Stop blocking
         val thePlayer = mc.thePlayer
 
@@ -994,9 +994,9 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
             chosenEntity = raycastEntity(range.toDouble(),
                 currentRotation.yaw,
                 currentRotation.pitch
-            ) { entity -> !livingRaycast || entity is EntityLivingBase && entity !is EntityArmorStand }
+            ) { entity -> !livingRaycast || entity is LivingEntity && entity !is EntityArmorStand }
 
-            if (chosenEntity != null && chosenEntity is EntityLivingBase && (NoFriends.handleEvents() || !(chosenEntity is EntityPlayer && chosenEntity.isClientFriend()))) {
+            if (chosenEntity != null && chosenEntity is LivingEntity && (NoFriends.handleEvents() || !(chosenEntity is EntityPlayer && chosenEntity.isClientFriend()))) {
                 if (raycastIgnored && target != chosenEntity) {
                     this.target = chosenEntity
                 }
@@ -1201,7 +1201,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
     /**
      * Check if [entity] is alive
      */
-    private fun isAlive(entity: EntityLivingBase) = entity.isEntityAlive && entity.health > 0
+    private fun isAlive(entity: LivingEntity) = entity.isEntityAlive && entity.health > 0
 
     /**
      * Check if player is able to block

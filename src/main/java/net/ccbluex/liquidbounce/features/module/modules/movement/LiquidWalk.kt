@@ -13,7 +13,7 @@ import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.ListValue
-import net.minecraft.block.BlockLiquid
+import net.minecraft.block.AbstractFluidBlock
 import net.minecraft.block.material.Material
 import net.minecraft.init.Blocks
 import net.minecraft.network.play.client.C03PacketPlayer
@@ -37,7 +37,7 @@ object LiquidWalk : Module("LiquidWalk", Category.MOVEMENT, Keyboard.KEY_J) {
         if (thePlayer == null || thePlayer.isSneaking) return
 
         when (mode.lowercase()) {
-            "ncp", "vanilla" -> if (collideBlock(thePlayer.entityBoundingBox) { it is BlockLiquid } && thePlayer.isInsideOfMaterial(Material.air) && !thePlayer.isSneaking) thePlayer.motionY = 0.08
+            "ncp", "vanilla" -> if (collideBlock(thePlayer.entityBoundingBox) { it is AbstractFluidBlock } && thePlayer.isInsideOfMaterial(Material.air) && !thePlayer.isSneaking) thePlayer.motionY = 0.08
             "aac" -> {
                 val blockPos = thePlayer.position.down()
                 if (!thePlayer.onGround && getBlock(blockPos) == Blocks.water || thePlayer.isInWater) {
@@ -64,9 +64,9 @@ object LiquidWalk : Module("LiquidWalk", Category.MOVEMENT, Keyboard.KEY_J) {
                 val block = getBlock(BlockPos(thePlayer).up())
                 val blockUp = getBlock(BlockPos(thePlayer.posX, thePlayer.posY + 1.1, thePlayer.posZ))
 
-                if (blockUp is BlockLiquid) {
+                if (blockUp is AbstractFluidBlock) {
                     thePlayer.motionY = 0.1
-                } else if (block is BlockLiquid) {
+                } else if (block is AbstractFluidBlock) {
                     thePlayer.motionY = 0.0
                 }
 
@@ -99,7 +99,7 @@ object LiquidWalk : Module("LiquidWalk", Category.MOVEMENT, Keyboard.KEY_J) {
         if (mc.thePlayer == null)
             return
 
-        if (event.block is BlockLiquid && !collideBlock(mc.thePlayer.entityBoundingBox) { it is BlockLiquid } && !mc.thePlayer.isSneaking) {
+        if (event.block is AbstractFluidBlock && !collideBlock(mc.thePlayer.entityBoundingBox) { it is AbstractFluidBlock } && !mc.thePlayer.isSneaking) {
             when (mode.lowercase()) {
                 "ncp", "vanilla" -> event.boundingBox = AxisAlignedBB.fromBounds(event.x.toDouble(), event.y.toDouble(), event.z.toDouble(), event.x + 1.toDouble(), event.y + 1.toDouble(), event.z + 1.toDouble())
             }
@@ -116,7 +116,7 @@ object LiquidWalk : Module("LiquidWalk", Category.MOVEMENT, Keyboard.KEY_J) {
         if (event.packet is C03PacketPlayer) {
             val packetPlayer = event.packet
 
-            if (collideBlock(AxisAlignedBB.fromBounds(thePlayer.entityBoundingBox.maxX, thePlayer.entityBoundingBox.maxY, thePlayer.entityBoundingBox.maxZ, thePlayer.entityBoundingBox.minX, thePlayer.entityBoundingBox.minY - 0.01, thePlayer.entityBoundingBox.minZ)) { it is BlockLiquid }) {
+            if (collideBlock(AxisAlignedBB.fromBounds(thePlayer.entityBoundingBox.maxX, thePlayer.entityBoundingBox.maxY, thePlayer.entityBoundingBox.maxZ, thePlayer.entityBoundingBox.minX, thePlayer.entityBoundingBox.minY - 0.01, thePlayer.entityBoundingBox.minZ)) { it is AbstractFluidBlock }) {
                 nextTick = !nextTick
                 if (nextTick) packetPlayer.y -= 0.001
             }
@@ -129,7 +129,7 @@ object LiquidWalk : Module("LiquidWalk", Category.MOVEMENT, Keyboard.KEY_J) {
 
         val block = getBlock(BlockPos(thePlayer.posX, thePlayer.posY - 0.01, thePlayer.posZ))
 
-        if (noJump && block is BlockLiquid)
+        if (noJump && block is AbstractFluidBlock)
             event.cancelEvent()
     }
 

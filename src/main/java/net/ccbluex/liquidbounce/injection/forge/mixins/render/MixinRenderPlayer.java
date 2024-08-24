@@ -2,10 +2,10 @@ package net.ccbluex.liquidbounce.injection.forge.mixins.render;
 
 import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura;
 import net.ccbluex.liquidbounce.features.module.modules.movement.NoSlow;
-import net.minecraft.client.entity.AbstractClientPlayer;
-import net.minecraft.client.entity.EntityPlayerSP;
+import net.minecraft.client.network.AbstractClientPlayerEntityEntity;
+import net.minecraft.entity.player.ClientPlayerEntity;
 import net.minecraft.client.model.ModelPlayer;
-import net.minecraft.client.render.entity.RenderPlayer;
+import net.minecraft.client.render.entity.PlayerEntityRenderer;
 import net.minecraft.entity.player.EnumPlayerModelParts;
 import net.minecraft.item.EnumAction;
 import net.minecraft.item.ItemStack;
@@ -14,8 +14,8 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
-@Mixin(RenderPlayer.class)
-public abstract class MixinRenderPlayer {
+@Mixin(PlayerEntityRenderer.class)
+public abstract class MixinPlayerEntityRenderer {
 
 
     @Shadow
@@ -25,7 +25,7 @@ public abstract class MixinRenderPlayer {
      * @author CCBlueX
      */
     @Overwrite
-    private void setModelVisibilities(AbstractClientPlayer p_setModelVisibilities_1_) {
+    private void setModelVisibilities(AbstractClientPlayerEntity p_setModelVisibilities_1_) {
         ModelPlayer modelplayer = this.getMainModel();
         if (p_setModelVisibilities_1_.isSpectator()) {
             modelplayer.setInvisible(false);
@@ -47,7 +47,7 @@ public abstract class MixinRenderPlayer {
                 modelplayer.heldItemRight = 0;
             } else {
                 modelplayer.heldItemRight = 1;
-                boolean isForceBlocking = p_setModelVisibilities_1_ instanceof EntityPlayerSP && ((itemstack.getItem() instanceof ItemSword && KillAura.INSTANCE.getRenderBlocking()) || NoSlow.INSTANCE.isUNCPBlocking());
+                boolean isForceBlocking = p_setModelVisibilities_1_ instanceof ClientPlayerEntity && ((itemstack.getItem() instanceof ItemSword && KillAura.INSTANCE.getRenderBlocking()) || NoSlow.INSTANCE.isUNCPBlocking());
                 if (p_setModelVisibilities_1_.getItemInUseCount() > 0 || isForceBlocking) {
                     EnumAction enumaction = isForceBlocking? EnumAction.BLOCK : itemstack.getItemUseAction();
                     if (enumaction == EnumAction.BLOCK) {

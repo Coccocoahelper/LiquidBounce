@@ -21,7 +21,7 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
-import net.minecraft.entity.EntityLivingBase
+import net.minecraft.entity.LivingEntity
 import net.minecraft.network.Packet
 import net.minecraft.network.play.server.S08PacketPlayerPosLook
 import net.minecraft.util.Vec3
@@ -292,11 +292,11 @@ object TickBase : Module("TickBase", Category.COMBAT) {
         val onGround: Boolean,
     )
 
-    private fun getNearestEntityInRange(): EntityLivingBase? {
+    private fun getNearestEntityInRange(): LivingEntity? {
         val player = mc.thePlayer ?: return null
 
         return mc.theWorld?.loadedEntityList
-            ?.filterIsInstance<EntityLivingBase>()
+            ?.filterIsInstance<LivingEntity>()
             ?.filter { EntityUtils.isSelected(it, true) }
             ?.minByOrNull { player.getDistanceToEntity(it) }
     }

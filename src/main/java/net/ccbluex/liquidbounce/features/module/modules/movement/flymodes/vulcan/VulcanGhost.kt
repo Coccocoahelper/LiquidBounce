@@ -9,7 +9,7 @@ import net.ccbluex.liquidbounce.event.BlockBBEvent
 import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.FlyMode
 import net.ccbluex.liquidbounce.script.api.global.Chat
-import net.minecraft.block.BlockLadder
+import net.minecraft.block.LadderBlock
 import net.minecraft.block.material.Material
 import net.minecraft.network.play.server.S08PacketPlayerPosLook
 import net.minecraft.util.AxisAlignedBB
@@ -32,7 +32,7 @@ object VulcanGhost : FlyMode("VulcanGhost") {
 
     override fun onBB(event: BlockBBEvent) {
         if (!mc.gameSettings.keyBindJump.isKeyDown && mc.gameSettings.keyBindSneak.isKeyDown) return
-        if (!event.block.material.blocksMovement() && event.block.material != Material.carpet && event.block.material != Material.vine && event.block.material != Material.snow && event.block !is BlockLadder) {
+        if (!event.block.material.blocksMovement() && event.block.material != Material.carpet && event.block.material != Material.vine && event.block.material != Material.snow && event.block !is LadderBlock) {
             event.boundingBox = AxisAlignedBB(
                 -2.0,
                 -1.0,

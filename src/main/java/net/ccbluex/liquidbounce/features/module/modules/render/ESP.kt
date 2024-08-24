@@ -30,7 +30,7 @@ import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.client.render.GlStateManager.enableTexture2D
 import net.minecraft.entity.Entity
-import net.minecraft.entity.EntityLivingBase
+import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.util.Vec3
 import org.lwjgl.opengl.GL11.*
@@ -106,7 +106,7 @@ object ESP : Module("ESP", Category.RENDER, hideModule = false) {
         }
 
         for (entity in mc.theWorld.loadedEntityList) {
-            if (entity !is EntityLivingBase || !bot && isBot(entity)) continue
+            if (entity !is LivingEntity || !bot && isBot(entity)) continue
             if (entity != mc.thePlayer && isSelected(entity, false)) {
 
                 val distanceSquared = mc.thePlayer.getDistanceSqToEntity(entity)
@@ -232,16 +232,16 @@ object ESP : Module("ESP", Category.RENDER, hideModule = false) {
     override val tag
         get() = mode
 
-    private fun getEntitiesByColor(maxDistanceSquared: Double): Map<Color, List<EntityLivingBase>> {
+    private fun getEntitiesByColor(maxDistanceSquared: Double): Map<Color, List<LivingEntity>> {
         return getEntitiesInRange(maxDistanceSquared)
             .groupBy { getColor(it) }
     }
 
-    private fun getEntitiesInRange(maxDistanceSquared: Double): List<EntityLivingBase> {
+    private fun getEntitiesInRange(maxDistanceSquared: Double): List<LivingEntity> {
         val player = mc.thePlayer
 
         return mc.theWorld.loadedEntityList.asSequence()
-            .filterIsInstance<EntityLivingBase>()
+            .filterIsInstance<LivingEntity>()
             .filterNot { isBot(it) && bot }
             .filter { isSelected(it, false) }
             .filter { player.getDistanceSqToEntity(it) <= maxDistanceSquared }
@@ -251,7 +251,7 @@ object ESP : Module("ESP", Category.RENDER, hideModule = false) {
 
     fun getColor(entity: Entity? = null): Color {
         run {
-            if (entity != null && entity is EntityLivingBase) {
+            if (entity != null && entity is LivingEntity) {
                 if (entity.hurtTime > 0)
                     return Color.RED
 
@@ -279,7 +279,7 @@ object ESP : Module("ESP", Category.RENDER, hideModule = false) {
 
         return if (colorRainbow) rainbow() else Color(colorRed, colorGreen, colorBlue)
     }
-    fun shouldRender(entity: EntityLivingBase): Boolean {
+    fun shouldRender(entity: LivingEntity): Boolean {
         return (bot || !isBot(entity))
     }
 

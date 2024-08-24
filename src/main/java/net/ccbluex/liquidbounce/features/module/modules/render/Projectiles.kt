@@ -27,7 +27,7 @@ import net.minecraft.block.material.Material
 import net.minecraft.client.render.Tessellator
 import net.minecraft.client.render.vertex.DefaultVertexFormats
 import net.minecraft.entity.Entity
-import net.minecraft.entity.EntityLivingBase
+import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.item.EntityEnderPearl
 import net.minecraft.entity.item.EntityExpBottle
 import net.minecraft.entity.player.EntityPlayer
@@ -62,7 +62,7 @@ object Projectiles : Module("Projectiles", Category.RENDER, gameDetecting = fals
         val renderManager = mc.renderManager
 
         for (entity in theWorld.loadedEntityList) {
-            val theEntity = entity as? EntityLivingBase ?: continue
+            val theEntity = entity as? LivingEntity ?: continue
             val heldStack = theEntity.heldItem ?: continue
 
             val item = heldStack.item

@@ -20,7 +20,7 @@ import net.ccbluex.liquidbounce.utils.timing.MSTimer
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
-import net.minecraft.entity.EntityLivingBase
+import net.minecraft.entity.LivingEntity
 import net.minecraft.network.play.client.C03PacketPlayer
 import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
 
@@ -45,7 +45,7 @@ object Criticals : Module("Criticals", Category.COMBAT, hideModule = false) {
 
     @EventTarget
     fun onAttack(event: AttackEvent) {
-        if (event.targetEntity is EntityLivingBase) {
+        if (event.targetEntity is LivingEntity) {
             val thePlayer = mc.thePlayer ?: return
             val entity = event.targetEntity
 

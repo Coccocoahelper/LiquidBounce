@@ -9,7 +9,7 @@ import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.modules.combat.FakeLag
 import net.ccbluex.liquidbounce.features.module.modules.combat.Velocity
 import net.ccbluex.liquidbounce.injection.implementations.IMixinEntity
-import net.minecraft.entity.EntityLivingBase
+import net.minecraft.entity.LivingEntity
 import net.minecraft.network.NetworkManager
 import net.minecraft.network.Packet
 import net.minecraft.network.play.INetHandlerPlayClient
@@ -23,7 +23,7 @@ object PacketUtils : MinecraftInstance(), Listenable {
     @EventTarget(priority = 2)
     fun onTick(event: GameTickEvent) {
         for (entity in mc.theWorld.loadedEntityList) {
-            if (entity is EntityLivingBase) {
+            if (entity is LivingEntity) {
                 (entity as? IMixinEntity)?.apply {
                     if (!truePos) {
                         trueX = entity.posX

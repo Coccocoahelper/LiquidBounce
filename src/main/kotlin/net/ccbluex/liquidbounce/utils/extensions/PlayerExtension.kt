@@ -13,7 +13,7 @@ import net.ccbluex.liquidbounce.utils.RotationUtils.getFixedSensitivityAngle
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getState
 import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils.serverSlot
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.stripColor
-import net.minecraft.client.entity.EntityPlayerSP
+import net.minecraft.entity.player.ClientPlayerEntity
 import net.minecraft.entity.Entity
 import net.minecraft.entity.boss.EntityDragon
 import net.minecraft.entity.monster.EntityGhast
@@ -41,7 +41,7 @@ fun Entity.getDistanceToEntityBox(entity: Entity) = eyes.distanceTo(getNearestPo
 
 fun Entity.getDistanceToBox(box: AxisAlignedBB) = eyes.distanceTo(getNearestPointBB(eyes, box))
 
-fun EntityPlayerSP.isNearEdge(threshold: Float): Boolean {
+fun ClientPlayerEntity.isNearEdge(threshold: Float): Boolean {
     val playerPos = Vec3(this.posX, this.posY, this.posZ)
     val blockPos = BlockPos(playerPos)
 
@@ -116,26 +116,26 @@ fun Entity.setPosAndPrevPos(currPos: Vec3, prevPos: Vec3 = currPos) {
     prevPosZ = prevPos.zCoord
 }
 
-fun EntityPlayerSP.setFixedSensitivityAngles(yaw: Float? = null, pitch: Float? = null) {
+fun ClientPlayerEntity.setFixedSensitivityAngles(yaw: Float? = null, pitch: Float? = null) {
     if (yaw != null) fixedSensitivityYaw = yaw
 
     if (pitch != null) fixedSensitivityPitch = pitch
 }
 
-var EntityPlayerSP.fixedSensitivityYaw
+var ClientPlayerEntity.fixedSensitivityYaw
     get() = getFixedSensitivityAngle(mc.thePlayer.rotationYaw)
     set(yaw) {
         rotationYaw = getFixedSensitivityAngle(yaw, rotationYaw)
     }
 
-var EntityPlayerSP.fixedSensitivityPitch
+var ClientPlayerEntity.fixedSensitivityPitch
     get() = getFixedSensitivityAngle(rotationPitch)
     set(pitch) {
         rotationPitch = getFixedSensitivityAngle(pitch.coerceIn(-90f, 90f), rotationPitch)
     }
 
 // Makes fixedSensitivityYaw, ... += work
-operator fun EntityPlayerSP.plusAssign(value: Float) {
+operator fun ClientPlayerEntity.plusAssign(value: Float) {
     fixedSensitivityYaw += value
     fixedSensitivityPitch += value
 }
@@ -146,22 +146,22 @@ fun Entity.interpolatedPosition() = Vec3(
     prevPosZ + (posZ - prevPosZ) * mc.timer.renderPartialTicks
 )
 
-fun EntityPlayerSP.stopY() {
+fun ClientPlayerEntity.stopY() {
     motionY = 0.0
 }
 
-fun EntityPlayerSP.stopXZ() {
+fun ClientPlayerEntity.stopXZ() {
     motionX = 0.0
     motionZ = 0.0
 }
 
-fun EntityPlayerSP.stop() {
+fun ClientPlayerEntity.stop() {
     stopXZ()
     stopY()
 }
 
 // Modified mc.playerController.onPlayerRightClick() that sends correct stack in its C08
-fun EntityPlayerSP.onPlayerRightClick(
+fun ClientPlayerEntity.onPlayerRightClick(
     clickPos: BlockPos, side: EnumFacing, clickVec: Vec3,
     stack: ItemStack? = inventory.mainInventory[serverSlot],
 ): Boolean {
@@ -221,7 +221,7 @@ fun EntityPlayerSP.onPlayerRightClick(
 }
 
 // Modified mc.playerController.sendUseItem() that sends correct stack in its C08
-fun EntityPlayerSP.sendUseItem(stack: ItemStack): Boolean {
+fun ClientPlayerEntity.sendUseItem(stack: ItemStack): Boolean {
     if (mc.playerController.isSpectator)
         return false
 
@@ -242,7 +242,7 @@ fun EntityPlayerSP.sendUseItem(stack: ItemStack): Boolean {
     } else false
 }
 
-fun EntityPlayerSP.tryJump() {
+fun ClientPlayerEntity.tryJump() {
     if (!mc.gameSettings.keyBindJump.isKeyDown) {
         this.jump()
     }

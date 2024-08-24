@@ -15,7 +15,7 @@ import net.minecraft.client.render.GlStateManager.*
 import net.minecraft.client.render.Tessellator
 import net.minecraft.client.render.vertex.DefaultVertexFormats
 import net.minecraft.entity.Entity
-import net.minecraft.entity.EntityLivingBase
+import net.minecraft.entity.LivingEntity
 import net.minecraft.util.AxisAlignedBB
 import net.minecraft.util.BlockPos
 import net.minecraft.util.ResourceLocation
@@ -675,7 +675,7 @@ object RenderUtils : MinecraftInstance() {
     private fun glColor(hex: Int) =
         glColor(hex shr 16 and 0xFF, hex shr 8 and 0xFF, hex and 0xFF, hex shr 24 and 0xFF)
 
-    fun draw2D(entity: EntityLivingBase, posX: Double, posY: Double, posZ: Double, color: Int, backgroundColor: Int) {
+    fun draw2D(entity: LivingEntity, posX: Double, posY: Double, posZ: Double, color: Int, backgroundColor: Int) {
         glPushMatrix()
         glTranslated(posX, posY, posZ)
         glRotated(-mc.renderManager.playerViewY.toDouble(), 0.0, 1.0, 0.0)

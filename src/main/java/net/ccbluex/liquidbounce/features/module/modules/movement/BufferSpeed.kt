@@ -19,7 +19,7 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.block.BlockSlab
-import net.minecraft.block.BlockSlime
+import net.minecraft.block.SlimeBlock
 import net.minecraft.block.BlockStairs
 import net.minecraft.init.Blocks
 import net.minecraft.network.play.server.S08PacketPlayerPosLook
@@ -97,7 +97,7 @@ object BufferSpeed : Module("BufferSpeed", Category.MOVEMENT, hideModule = false
         if (thePlayer.onGround) {
             fastHop = false
 
-            if (slime && (getBlock(blockPos.down()) is BlockSlime || getBlock(blockPos) is BlockSlime)) {
+            if (slime && (getBlock(blockPos.down()) is SlimeBlock || getBlock(blockPos) is SlimeBlock)) {
                 thePlayer.tryJump()
 
                 thePlayer.motionX = thePlayer.motionY * 1.132

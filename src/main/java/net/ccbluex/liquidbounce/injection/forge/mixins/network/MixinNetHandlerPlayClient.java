@@ -21,9 +21,9 @@ import net.ccbluex.liquidbounce.utils.extensions.PlayerExtensionKt;
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils;
 import net.minecraft.client.ClientBrandRetriever;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.entity.EntityPlayerSP;
+import net.minecraft.entity.player.ClientPlayerEntity;
 import net.minecraft.client.gui.GuiDownloadTerrain;
-import net.minecraft.client.multiplayer.PlayerControllerMP;
+import net.minecraft.client.network.ClientPlayerInteractionManager;
 import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.client.network.NetHandlerPlayClient;
 import net.minecraft.entity.Entity;
@@ -165,7 +165,7 @@ public abstract class MixinNetHandlerPlayClient {
             return;
 
         PacketThreadUtil.checkThreadAndEnqueue(packetIn, (NetHandlerPlayClient) (Object) this, gameController);
-        gameController.playerController = new PlayerControllerMP(gameController, (NetHandlerPlayClient) (Object) this);
+        gameController.playerController = new ClientPlayerInteractionManager(gameController, (NetHandlerPlayClient) (Object) this);
         clientWorldController = new WorldClient((NetHandlerPlayClient) (Object) this, new WorldSettings(0L, packetIn.getGameType(), false, packetIn.isHardcoreMode(), packetIn.getWorldType()), packetIn.getDimension(), packetIn.getDifficulty(), gameController.mcProfiler);
         gameController.gameSettings.difficulty = packetIn.getDifficulty();
         gameController.loadWorld(clientWorldController);
@@ -202,7 +202,7 @@ public abstract class MixinNetHandlerPlayClient {
         boolean shouldTrigger = module2.blinkingSend();
         PacketUtils.sendPacket(p_sendPacket_1_, shouldTrigger);
 
-        EntityPlayerSP player = Minecraft.getMinecraft().thePlayer;
+        ClientPlayerEntity player = Minecraft.getMinecraft().thePlayer;
         NoRotateSet module = NoRotateSet.INSTANCE;
 
         if (player == null || !module.shouldModify(player)) {
@@ -217,7 +217,7 @@ public abstract class MixinNetHandlerPlayClient {
             NoRotateSet.INSTANCE.rotateBackToPlayerRotation();
         }
 
-        // Slightly modify the client-side rotations, so they pass the rotation difference check in onUpdateWalkingPlayer, EntityPlayerSP.
+        // Slightly modify the client-side rotations, so they pass the rotation difference check in onUpdateWalkingPlayer, ClientPlayerEntity.
         player.rotationYaw = (rotation.getYaw() + 0.000001f * sign) % 360.0F;
         player.rotationPitch = (rotation.getPitch() + 0.000001f * sign) % 360.0F;
         RotationUtils.INSTANCE.syncRotations();

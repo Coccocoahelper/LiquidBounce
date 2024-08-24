@@ -21,7 +21,7 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
-import net.minecraft.entity.EntityLivingBase
+import net.minecraft.entity.LivingEntity
 import net.minecraft.network.play.client.C03PacketPlayer
 import net.minecraft.network.play.client.C0BPacketEntityAction
 import net.minecraft.network.play.client.C0BPacketEntityAction.Action.*
@@ -105,7 +105,7 @@ object SuperKnockback : Module("SuperKnockback", Category.COMBAT, hideModule = f
     @EventTarget
     fun onAttack(event: AttackEvent) {
         val player = mc.thePlayer ?: return
-        val target = event.targetEntity as? EntityLivingBase ?: return
+        val target = event.targetEntity as? LivingEntity ?: return
         val distance = player.getDistanceToEntityBox(target)
 
         val rotationToPlayer = toRotation(player.hitBox.center, false, target).fixedSensitivity().yaw

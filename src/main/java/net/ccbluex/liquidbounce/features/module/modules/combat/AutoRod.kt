@@ -18,7 +18,7 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.minecraft.entity.Entity
-import net.minecraft.entity.EntityLivingBase
+import net.minecraft.entity.LivingEntity
 import net.minecraft.init.Items
 
 object AutoRod : Module("AutoRod", Category.COMBAT, hideModule = false) {
@@ -98,7 +98,7 @@ object AutoRod : Module("AutoRod", Category.COMBAT, hideModule = false) {
 
                         // Check if the enemy's health is below the threshold.
                         if (ignoreOnEnemyLowHealth) {
-                            if (getHealth(facingEntity as EntityLivingBase, healthFromScoreboard, absorption) >= enemyHealthThreshold) {
+                            if (getHealth(facingEntity as LivingEntity, healthFromScoreboard, absorption) >= enemyHealthThreshold) {
                                 rod = true
                             }
                         } else {

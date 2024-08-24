@@ -25,7 +25,7 @@ import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.block.Block
-import net.minecraft.block.BlockLiquid
+import net.minecraft.block.AbstractFluidBlock
 import net.minecraft.init.Blocks.air
 import net.minecraft.init.Blocks.bedrock
 import net.minecraft.item.ItemSword
@@ -247,6 +247,6 @@ object Nuker : Module("Nuker", Category.WORLD, gameDetecting = false, hideModule
     /**
      * Check if [block] is a valid block to break
      */
-    private fun validBlock(block: Block) = block != air && block !is BlockLiquid && block != bedrock
+    private fun validBlock(block: Block) = block != air && block !is AbstractFluidBlock && block != bedrock
 
 }

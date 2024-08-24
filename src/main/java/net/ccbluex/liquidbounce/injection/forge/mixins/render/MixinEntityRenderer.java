@@ -20,11 +20,11 @@ import net.ccbluex.liquidbounce.utils.RotationUtils;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.entity.EntityPlayerSP;
+import net.minecraft.entity.player.ClientPlayerEntity;
 import net.minecraft.client.render.ActiveRenderInfo;
 import net.minecraft.client.render.EntityRenderer;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.item.EntityItemFrame;
 import net.minecraft.entity.passive.EntityAnimal;
 import net.minecraft.potion.Potion;
@@ -89,7 +89,7 @@ public abstract class MixinEntityRenderer {
             Entity entity = mc.getRenderViewEntity();
             float f = entity.getEyeHeight();
 
-            if (entity instanceof EntityLivingBase && ((EntityLivingBase) entity).isPlayerSleeping()) {
+            if (entity instanceof LivingEntity && ((LivingEntity) entity).isPlayerSleeping()) {
                 f += 1;
                 translate(0F, 0.3F, 0f);
 
@@ -250,7 +250,7 @@ public abstract class MixinEntityRenderer {
 
             if (pointedEntity != null && (d2 < d1 || mc.objectMouseOver == null)) {
                 mc.objectMouseOver = new MovingObjectPosition(pointedEntity, vec33);
-                if (pointedEntity instanceof EntityLivingBase || pointedEntity instanceof EntityItemFrame) {
+                if (pointedEntity instanceof LivingEntity || pointedEntity instanceof EntityItemFrame) {
                     mc.pointedEntity = pointedEntity;
                 }
             }
@@ -264,15 +264,15 @@ public abstract class MixinEntityRenderer {
     /**
      * Properly implement the confusion option from AntiBlind module
      */
-    @Redirect(method = "setupCameraTransform", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/entity/EntityPlayerSP;isPotionActive(Lnet/minecraft/potion/Potion;)Z"))
-    private boolean injectAntiBlindA(EntityPlayerSP instance, Potion potion) {
+    @Redirect(method = "setupCameraTransform", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/entity/ClientPlayerEntity;isPotionActive(Lnet/minecraft/potion/Potion;)Z"))
+    private boolean injectAntiBlindA(ClientPlayerEntity instance, Potion potion) {
         AntiBlind module = AntiBlind.INSTANCE;
 
         return (!module.handleEvents() || !module.getConfusionEffect()) && instance.isPotionActive(potion);
     }
 
-    @Redirect(method = {"setupFog", "updateFogColor"}, at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/EntityLivingBase;isPotionActive(Lnet/minecraft/potion/Potion;)Z"))
-    private boolean injectAntiBlindB(EntityLivingBase instance, Potion potion) {
+    @Redirect(method = {"setupFog", "updateFogColor"}, at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;isPotionActive(Lnet/minecraft/potion/Potion;)Z"))
+    private boolean injectAntiBlindB(LivingEntity instance, Potion potion) {
         if (instance != mc.thePlayer) {
             return instance.isPotionActive(potion);
         }

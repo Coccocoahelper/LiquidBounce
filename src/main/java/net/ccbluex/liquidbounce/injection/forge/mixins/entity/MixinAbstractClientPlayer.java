@@ -9,7 +9,7 @@ import net.ccbluex.liquidbounce.cape.CapeAPI;
 import net.ccbluex.liquidbounce.cape.CapeInfo;
 import net.ccbluex.liquidbounce.features.module.modules.misc.NameProtect;
 import net.ccbluex.liquidbounce.features.module.modules.render.NoFOV;
-import net.minecraft.client.entity.AbstractClientPlayer;
+import net.minecraft.client.network.AbstractClientPlayerEntityEntity;
 import net.minecraft.client.resources.DefaultPlayerSkin;
 import net.minecraft.init.Items;
 import net.minecraft.util.ResourceLocation;
@@ -24,9 +24,9 @@ import java.util.Objects;
 
 import static net.ccbluex.liquidbounce.utils.MinecraftInstance.mc;
 
-@Mixin(AbstractClientPlayer.class)
+@Mixin(AbstractClientPlayerEntity.class)
 @SideOnly(Side.CLIENT)
-public abstract class MixinAbstractClientPlayer extends MixinEntityPlayer {
+public abstract class MixinAbstractClientPlayerEntity extends MixinEntityPlayer {
 
     private CapeInfo capeInfo;
 

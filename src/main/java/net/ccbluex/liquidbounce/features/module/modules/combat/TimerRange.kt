@@ -27,7 +27,7 @@ import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.entity.Entity
-import net.minecraft.entity.EntityLivingBase
+import net.minecraft.entity.LivingEntity
 import net.minecraft.network.Packet
 import net.minecraft.network.play.client.C07PacketPlayerDigging
 import net.minecraft.network.play.client.C12PacketUpdateSign
@@ -157,7 +157,7 @@ object TimerRange : Module("TimerRange", Category.COMBAT, hideModule = false) {
      */
     @EventTarget
     fun onAttack(event: AttackEvent) {
-        if (event.targetEntity !is EntityLivingBase && playerTicks >= 1) {
+        if (event.targetEntity !is LivingEntity && playerTicks >= 1) {
             shouldResetTimer()
             return
         } else {

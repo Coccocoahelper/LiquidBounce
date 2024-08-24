@@ -23,7 +23,7 @@ import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.entity.Entity
-import net.minecraft.entity.EntityLivingBase
+import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.util.Vec3
 import org.lwjgl.opengl.GL11.*
@@ -77,7 +77,7 @@ object Tracers : Module("Tracers", Category.RENDER, hideModule = false) {
 
             if (distanceSquared <= maxRenderDistanceSq) {
                 if (onLook && !isLookingOnEntities(entity, maxAngleDifference.toDouble())) continue
-                if (entity !is EntityLivingBase || !bot && isBot(entity)) continue
+                if (entity !is LivingEntity || !bot && isBot(entity)) continue
                 if (!thruBlocks && !RotationUtils.isVisible(Vec3(entity.posX, entity.posY, entity.posZ))) continue
 
                 if (entity != thePlayer && isSelected(entity, false)) {

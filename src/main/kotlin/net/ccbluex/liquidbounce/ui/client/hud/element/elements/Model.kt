@@ -14,7 +14,7 @@ import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.client.render.GlStateManager.*
 import net.minecraft.client.render.OpenGlHelper
 import net.minecraft.client.render.RenderHelper
-import net.minecraft.entity.EntityLivingBase
+import net.minecraft.entity.LivingEntity
 import org.lwjgl.opengl.GL11.*
 import kotlin.math.abs
 import kotlin.math.atan
@@ -83,7 +83,7 @@ class Model(x: Double = 40.0, y: Double = 100.0) : Element(x, y) {
     /**
      * Draw [entityLivingBase] to screen
      */
-    private fun drawEntityOnScreen(yaw: Float, pitch: Float, entityLivingBase: EntityLivingBase) {
+    private fun drawEntityOnScreen(yaw: Float, pitch: Float, entityLivingBase: LivingEntity) {
         resetColor()
         enableColorMaterial()
         glPushMatrix()

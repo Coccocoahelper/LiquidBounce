@@ -8,12 +8,12 @@ package net.ccbluex.liquidbounce.injection.forge.mixins.render;
 import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura;
 import net.ccbluex.liquidbounce.features.module.modules.movement.NoSlow;
 import net.minecraft.block.Block;
-import net.minecraft.client.entity.EntityPlayerSP;
-import net.minecraft.client.model.ModelBiped;
+import net.minecraft.entity.player.ClientPlayerEntity;
+import net.minecraft.client.render.entity.model.BiPedModel;
 import net.minecraft.client.render.block.model.ItemCameraTransforms;
 import net.minecraft.client.render.entity.RendererLivingEntity;
 import net.minecraft.client.render.entity.layers.LayerHeldItem;
-import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Items;
 import net.minecraft.item.Item;
@@ -44,7 +44,7 @@ public class MixinLayerHeldItem {
      * @author CCBlueX
      */
     @Overwrite
-    public void doRenderLayer(EntityLivingBase entitylivingbaseIn, float p_177141_2_, float p_177141_3_, float partialTicks, float p_177141_5_, float p_177141_6_, float p_177141_7_, float scale) {
+    public void doRenderLayer(LivingEntity entitylivingbaseIn, float p_177141_2_, float p_177141_3_, float partialTicks, float p_177141_5_, float p_177141_6_, float p_177141_7_, float scale) {
         ItemStack itemstack = entitylivingbaseIn.getHeldItem();
 
         if (itemstack != null) {
@@ -60,18 +60,18 @@ public class MixinLayerHeldItem {
             final UUID uuid = entitylivingbaseIn.getUniqueID();
             final EntityPlayer entityplayer = mc.theWorld.getPlayerEntityByUUID(uuid);
 
-            if (entityplayer != null && (entityplayer.isBlocking() || entityplayer instanceof EntityPlayerSP && ((itemstack.getItem() instanceof ItemSword && KillAura.INSTANCE.getRenderBlocking()) || NoSlow.INSTANCE.isUNCPBlocking()))) {
+            if (entityplayer != null && (entityplayer.isBlocking() || entityplayer instanceof ClientPlayerEntity && ((itemstack.getItem() instanceof ItemSword && KillAura.INSTANCE.getRenderBlocking()) || NoSlow.INSTANCE.isUNCPBlocking()))) {
                 if (entitylivingbaseIn.isSneaking()) {
-                    ((ModelBiped) livingEntityRenderer.getMainModel()).postRenderArm(0.0325F);
+                    ((BiPedModel) livingEntityRenderer.getMainModel()).postRenderArm(0.0325F);
                     translate(-0.58F, 0.3F, -0.2F);
                     rotate(-24390f, 137290f, -2009900f, -2054900f);
                 } else {
-                    ((ModelBiped) livingEntityRenderer.getMainModel()).postRenderArm(0.0325F);
+                    ((BiPedModel) livingEntityRenderer.getMainModel()).postRenderArm(0.0325F);
                     translate(-0.48F, 0.2F, -0.2F);
                     rotate(-24390f, 137290f, -2009900f, -2054900f);
                 }
             } else {
-                ((ModelBiped) livingEntityRenderer.getMainModel()).postRenderArm(0.0625F);
+                ((BiPedModel) livingEntityRenderer.getMainModel()).postRenderArm(0.0625F);
             }
 
             translate(-0.0625F, 0.4375F, 0.0625F);

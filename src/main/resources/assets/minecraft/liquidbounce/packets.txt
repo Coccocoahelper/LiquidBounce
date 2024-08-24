@@ -28,7 +28,7 @@ C16PacketClientStatus
 C17PacketCustomPayload
 C18PacketSpectate
 C19PacketResourcePackStatus
-C00Handshake
+HandshakeC2SPacket
 S00PacketDisconnect
 S01PacketEncryptionRequest
 S02PacketLoginSuccess

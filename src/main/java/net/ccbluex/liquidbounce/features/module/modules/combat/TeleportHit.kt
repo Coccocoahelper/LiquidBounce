@@ -15,15 +15,15 @@ import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.PathUtils.findPath
 import net.ccbluex.liquidbounce.utils.RaycastUtils
 import net.ccbluex.liquidbounce.utils.RotationUtils
-import net.minecraft.client.entity.EntityPlayerSP
-import net.minecraft.entity.EntityLivingBase
+import net.minecraft.entity.player.ClientPlayerEntity
+import net.minecraft.entity.LivingEntity
 import net.minecraft.network.play.client.C02PacketUseEntity
 import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
 import net.minecraft.util.Vec3
 
 object TeleportHit : Module("TeleportHit", Category.COMBAT, hideModule = false) {
 
-    private var targetEntity: EntityLivingBase? = null
+    private var targetEntity: LivingEntity? = null
     private var shouldHit = false
 
     @EventTarget
@@ -31,12 +31,12 @@ object TeleportHit : Module("TeleportHit", Category.COMBAT, hideModule = false) 
         if (event.eventState != EventState.PRE)
             return
 
-        val facedEntity = RaycastUtils.raycastEntity(100.0) { raycastedEntity -> raycastedEntity is EntityLivingBase }
+        val facedEntity = RaycastUtils.raycastEntity(100.0) { raycastedEntity -> raycastedEntity is LivingEntity }
 
-        val thePlayer: EntityPlayerSP = mc.thePlayer ?: return
+        val thePlayer: ClientPlayerEntity = mc.thePlayer ?: return
 
         if (mc.gameSettings.keyBindAttack.isKeyDown && isSelected(facedEntity, true)) {
-            if (facedEntity?.getDistanceSqToEntity(mc.thePlayer)!! >= 1) targetEntity = facedEntity as EntityLivingBase
+            if (facedEntity?.getDistanceSqToEntity(mc.thePlayer)!! >= 1) targetEntity = facedEntity as LivingEntity
         }
 
         targetEntity?.let {

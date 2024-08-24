@@ -8,7 +8,7 @@ import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.block.Block
-import net.minecraft.entity.EntityLivingBase
+import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.effect.EntityLightningBolt
 import net.minecraft.init.Blocks
 import net.minecraft.network.play.server.S2CPacketSpawnGlobalEntity
@@ -29,7 +29,7 @@ object AttackEffects : Module("AttackEffects", Category.RENDER, hideModule = fal
 
     @EventTarget
     fun onAttack(event: AttackEvent) {
-        val target = event.targetEntity as? EntityLivingBase ?: return
+        val target = event.targetEntity as? LivingEntity ?: return
 
         repeat(amount) {
             doEffect(target)
@@ -50,7 +50,7 @@ object AttackEffects : Module("AttackEffects", Category.RENDER, hideModule = fal
         }
     }
 
-    private fun doEffect(target: EntityLivingBase) {
+    private fun doEffect(target: LivingEntity) {
         when (particle) {
             "Blood" -> spawnBloodParticle(EnumParticleTypes.BLOCK_CRACK, target)
             "Crits" -> spawnEffectParticle(EnumParticleTypes.CRIT, target)
@@ -63,7 +63,7 @@ object AttackEffects : Module("AttackEffects", Category.RENDER, hideModule = fal
         }
     }
 
-    private fun spawnBloodParticle(particleType: EnumParticleTypes, target: EntityLivingBase) {
+    private fun spawnBloodParticle(particleType: EnumParticleTypes, target: LivingEntity) {
         mc.theWorld.spawnParticle(particleType,
             target.posX, target.posY + target.height - 0.75, target.posZ,
             0.0, 0.0, 0.0,
@@ -71,14 +71,14 @@ object AttackEffects : Module("AttackEffects", Category.RENDER, hideModule = fal
         )
     }
 
-    private fun spawnEffectParticle(particleType: EnumParticleTypes, target: EntityLivingBase) {
+    private fun spawnEffectParticle(particleType: EnumParticleTypes, target: LivingEntity) {
         mc.effectRenderer.spawnEffectParticle(particleType.particleID,
             target.posX, target.posY, target.posZ,
             target.posX, target.posY, target.posZ
         )
     }
 
-    private fun spawnLightning(target: EntityLivingBase) {
+    private fun spawnLightning(target: LivingEntity) {
         mc.netHandler.handleSpawnGlobalEntity(S2CPacketSpawnGlobalEntity(
             EntityLightningBolt(mc.theWorld, target.posX, target.posY, target.posZ)
         ))

@@ -23,10 +23,10 @@ import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.entity.Entity
-import net.minecraft.entity.EntityLivingBase
+import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.network.Packet
-import net.minecraft.network.handshake.client.C00Handshake
+import net.minecraft.network.packet.c2s.handshake.HandshakeC2SPacket
 import net.minecraft.network.play.server.*
 import net.minecraft.network.status.client.C00PacketServerQuery
 import net.minecraft.network.status.server.S01PacketPong
@@ -106,7 +106,7 @@ object Backtrack : Module("Backtrack", Category.COMBAT, hideModule = false) {
     private val packetQueue = LinkedHashMap<Packet<*>, Long>()
     private val positions = mutableListOf<Pair<Vec3, Long>>()
 
-    var target: EntityLivingBase? = null
+    var target: LivingEntity? = null
 
     private var globalTimer = MSTimer()
 
@@ -189,7 +189,7 @@ object Backtrack : Module("Backtrack", Category.COMBAT, hideModule = false) {
 
                 when (packet) {
                     // Ignore server related packets
-                    is C00Handshake, is C00PacketServerQuery, is S02PacketChat, is S01PacketPong ->
+                    is HandshakeC2SPacket, is C00PacketServerQuery, is S02PacketChat, is S01PacketPong ->
                         return
 
                     // Flush on teleport or disconnect
@@ -281,7 +281,7 @@ object Backtrack : Module("Backtrack", Category.COMBAT, hideModule = false) {
             }
         }
 
-        val target = target as? EntityLivingBase
+        val target = target as? LivingEntity
         val targetMixin = target as? IMixinEntity
         if (mode == "Modern")
         {
@@ -325,7 +325,7 @@ object Backtrack : Module("Backtrack", Category.COMBAT, hideModule = false) {
             reset()
         }
 
-        if (event.targetEntity is EntityLivingBase) {
+        if (event.targetEntity is LivingEntity) {
             target = event.targetEntity
         }
     }

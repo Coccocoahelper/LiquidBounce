@@ -10,7 +10,7 @@ import net.ccbluex.liquidbounce.utils.ServerUtils;
 import net.ccbluex.liquidbounce.utils.render.RenderUtils;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.ScaledResolution;
-import net.minecraft.client.multiplayer.GuiConnecting;
+import net.minecraft.client.gui.screen.ConnectScreen;
 import net.minecraft.client.multiplayer.ServerData;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
@@ -20,9 +20,9 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(GuiConnecting.class)
+@Mixin(ConnectScreen.class)
 @SideOnly(Side.CLIENT)
-public abstract class MixinGuiConnecting extends GuiScreen {
+public abstract class MixinConnectScreen extends GuiScreen {
 
     @Inject(method = "connect", at = @At("HEAD"))
     private void headConnect(final String ip, final int port, CallbackInfo callbackInfo) {

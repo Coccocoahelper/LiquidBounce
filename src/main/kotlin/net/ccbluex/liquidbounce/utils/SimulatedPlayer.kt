@@ -11,11 +11,11 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.NoJumpDelay
 import net.minecraft.block.*
 import net.minecraft.block.material.Material
 import net.minecraft.block.state.IBlockState
-import net.minecraft.client.entity.EntityPlayerSP
+import net.minecraft.entity.player.ClientPlayerEntity
 import net.minecraft.enchantment.EnchantmentHelper
 import net.minecraft.enchantment.EnchantmentProtection
 import net.minecraft.entity.Entity
-import net.minecraft.entity.EntityLivingBase
+import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.SharedMonsterAttributes
 import net.minecraft.entity.ai.attributes.BaseAttributeMap
 import net.minecraft.entity.ai.attributes.IAttribute
@@ -44,7 +44,7 @@ import kotlin.math.ceil
  */
 @Suppress("SameParameterValue", "MemberVisibilityCanBePrivate")
 class SimulatedPlayer(
-    private val player: EntityPlayerSP,
+    private val player: ClientPlayerEntity,
     var box: AxisAlignedBB,
     var movementInput: MovementInput,
     private var jumpTicks: Int,
@@ -152,7 +152,7 @@ class SimulatedPlayer(
             )
         }
 
-        private fun createFoodStatsCopy(player: EntityPlayerSP): FoodStats {
+        private fun createFoodStatsCopy(player: ClientPlayerEntity): FoodStats {
             val foodStatsNBT = NBTTagCompound()
             val foodStats = FoodStats()
 
@@ -161,7 +161,7 @@ class SimulatedPlayer(
             return foodStats
         }
 
-        private fun createCapabilitiesCopy(player: EntityPlayerSP): PlayerCapabilities {
+        private fun createCapabilitiesCopy(player: ClientPlayerEntity): PlayerCapabilities {
             val capabilitiesNBT = NBTTagCompound()
             val capabilities = PlayerCapabilities()
 
@@ -303,7 +303,7 @@ class SimulatedPlayer(
             jumpMovementFactor = (jumpMovementFactor.toDouble() + SPEED_IN_AIR.toDouble() * 0.3).toFloat()
         }
 
-        // EntityPlayerSP post onLivingUpdate
+        // ClientPlayerEntity post onLivingUpdate
         if (this.onGround && this.capabilities.isFlying && !isSpectator) {
             this.capabilities.isFlying = false
         }
@@ -860,7 +860,7 @@ class SimulatedPlayer(
                             // We don't want things to negatively interact back to us (cactus, tripwire, tnt or whatever)
                             if (block is BlockWeb) {
                                 isInWeb = true
-                            } else if (block is BlockSoulSand) {
+                            } else if (block is SoulSandBlock) {
                                 motionX *= 0.4
                                 motionZ *= 0.4
                             }
@@ -926,8 +926,8 @@ class SimulatedPlayer(
                         // val result = null
                         // ^^ block.isEntityInsideMaterial(worldObj, blockPos, state, player, l.toDouble(), material, false) always null
                         if (block.material === material) {
-                            val d0 = ((l1 + 1).toFloat() - BlockLiquid.getLiquidHeightPercent((state.getValue(
-                                BlockLiquid.LEVEL
+                            val d0 = ((l1 + 1).toFloat() - AbstractFluidBlock.getLiquidHeightPercent((state.getValue(
+                                AbstractFluidBlock.LEVEL
                             ) as Int)
                             )).toDouble()
                             if (l.toDouble() >= d0) {
@@ -973,7 +973,7 @@ class SimulatedPlayer(
     }
 
     private fun onEntityCollidedWithBlock(block: Block) {
-        if (block is BlockSlime) {
+        if (block is SlimeBlock) {
             if (abs(motionY) < 0.1 && !isSneaking()) {
                 val motion = 0.4 + abs(motionY) * 0.2
 
@@ -1248,7 +1248,7 @@ class SimulatedPlayer(
         return this.attributeMap!!
     }
 
-    private fun isLivingOnLadder(block: Block?, world: World, pos: BlockPos?, entity: EntityLivingBase): Boolean {
+    private fun isLivingOnLadder(block: Block?, world: World, pos: BlockPos?, entity: LivingEntity): Boolean {
         val isSpectator = this.isSpectator
         return if (isSpectator) {
             false
@@ -1286,7 +1286,7 @@ class SimulatedPlayer(
     }
 
     private fun onLanded(block: Block) {
-        if (block is BlockSlime) {
+        if (block is SlimeBlock) {
             if (isSneaking()) {
                 motionY = 0.0
             } else if (motionY < 0.0) {

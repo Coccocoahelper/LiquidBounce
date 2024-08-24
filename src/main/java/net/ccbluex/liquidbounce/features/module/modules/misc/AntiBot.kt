@@ -17,7 +17,7 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
-import net.minecraft.entity.EntityLivingBase
+import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.network.play.server.S0BPacketAnimation
 import net.minecraft.network.play.server.S13PacketDestroyEntities
@@ -67,7 +67,7 @@ object AntiBot : Module("AntiBot", Category.MISC, hideModule = false) {
     private val tabPlayerNames = mutableSetOf<String>()
     private val tabDuplicateNames = mutableSetOf<String>()
 
-    fun isBot(entity: EntityLivingBase): Boolean {
+    fun isBot(entity: LivingEntity): Boolean {
         // Check if entity is a player
         if (entity !is EntityPlayer)
             return false
@@ -251,7 +251,7 @@ object AntiBot : Module("AntiBot", Category.MISC, hideModule = false) {
         if (packet is S0BPacketAnimation) {
             val entity = mc.theWorld.getEntityByID(packet.entityID)
 
-            if (entity != null && entity is EntityLivingBase && packet.animationType == 0
+            if (entity != null && entity is LivingEntity && packet.animationType == 0
                     && entity.entityId !in swingList)
                 swingList += entity.entityId
         }
@@ -287,7 +287,7 @@ object AntiBot : Module("AntiBot", Category.MISC, hideModule = false) {
     fun onAttack(e: AttackEvent) {
         val entity = e.targetEntity
 
-        if (entity != null && entity is EntityLivingBase && entity.entityId !in hitList)
+        if (entity != null && entity is LivingEntity && entity.entityId !in hitList)
             hitList += entity.entityId
     }
 
