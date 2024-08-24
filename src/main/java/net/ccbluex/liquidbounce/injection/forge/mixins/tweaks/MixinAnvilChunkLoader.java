@@ -7,7 +7,7 @@ package net.ccbluex.liquidbounce.injection.forge.mixins.tweaks;
 
 import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.world.chunk..ThreadedAnvilChunkStorage;
+import net.minecraft.world.chunk.storage.AnvilChunkLoader;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
@@ -15,8 +15,8 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import java.io.DataInputStream;
 import java.io.IOException;
 
-@Mixin(ThreadedAnvilChunkStorage.class)
-public class MixinThreadedAnvilChunkStorage {
+@Mixin(AnvilChunkLoader.class)
+public class MixinAnvilChunkLoader {
 
     /**
      * Due to limitations with local variable capture in Mixins,
