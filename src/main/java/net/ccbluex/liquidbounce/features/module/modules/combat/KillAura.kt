@@ -257,7 +257,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R) {
     private val predictClientMovement by intRange("PredictClientMovement", 1..2, 0..5)
     private val predictOnlyWhenOutOfRange by boolean(
         "PredictOnlyWhenOutOfRange", false
-    ) { predictClientMovement != 0 }
+    ) { predictClientMovement.last != 0 }
     private val predictEnemyPosition by float("PredictEnemyPosition", 1.5f, -1f..2f)
 
     private val forceFirstHit by boolean("ForceFirstHit", false) { !respectMissCooldown && !useHitDelay }
@@ -278,7 +278,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R) {
         "TicksLateToSwing", 4, 0..20
     ) { swing && failSwing && swingWhenTicksLate.isActive() && options.rotationsActive }
     private val renderBoxOnSwingFail by boolean("RenderBoxOnSwingFail", false) { failSwing }.subjective()
-    private val renderBoxColor = ColorSettingsInteger(this, "RenderBoxColor") { renderBoxOnSwingFail }.with(Color.CYAN).subjective()
+    private val renderBoxColor by color("RenderBoxColor", Color.CYAN) { renderBoxOnSwingFail }.subjective()
     private val renderBoxFadeSeconds by float("RenderBoxFadeSeconds", 1f, 0f..5f) { renderBoxOnSwingFail }.subjective()
 
     // Inventory
@@ -1215,7 +1215,6 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R) {
 
         synchronized(swingFails) {
             val fadeSeconds = renderBoxFadeSeconds * 1000L
-            val colorSettings = renderBoxColor
 
             val renderManager = mc.renderManager
 
@@ -1225,7 +1224,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R) {
 
                 val offsetBox = box.offset(it.vec3 - renderManager.renderPos)
 
-                RenderUtils.drawAxisAlignedBB(offsetBox, colorSettings.color(a = transparency.roundToInt()))
+                RenderUtils.drawAxisAlignedBB(offsetBox, renderBoxColor)
 
                 timestamp > fadeSeconds
             }
@@ -1252,7 +1251,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R) {
                     serverRotation.lerpWith(currentRotation ?: player.rotation, mc.timer.renderPartialTicks)
                 ) * player.getDistanceToEntityBox(target).coerceAtMost(range.toDouble())
 
-                val offSetBox = box.offset(rotationVec - renderManager.renderPos)
+                val offSetBox = box.offset((rotationVec - renderManager.renderPos) - f)
 
                 RenderUtils.drawAxisAlignedBB(offSetBox, aimPointBoxColor)
             }
