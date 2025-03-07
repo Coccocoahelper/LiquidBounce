@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.utils.rotation.RotationUtils.searchCenter
 import net.ccbluex.liquidbounce.utils.rotation.RotationUtils.toRotation
 import net.ccbluex.liquidbounce.utils.simulation.SimulatedPlayer
 import net.ccbluex.liquidbounce.utils.timing.MSTimer
+import net.ccbluex.liquidbounce.utils.timing.TimeUtils.randomDelay
 import net.minecraft.entity.Entity
 import java.util.*
 import kotlin.math.atan
@@ -37,7 +38,7 @@ object Aimbot : Module("Aimbot", Category.COMBAT) {
     private val generateSpotBasedOnDistance by boolean(
         "GenerateSpotBasedOnDistance", false
     ) { horizontalAim || verticalAim }
-    private val predictClientMovement by int("PredictClientMovement", 2, 0..5)
+    private val predictClientMovement by intRange("PredictClientMovement", 1..2, 0..5)
     private val predictEnemyPosition by float("PredictEnemyPosition", 1.5f, -1f..2f)
 
     private val highestBodyPointToTargetValue = choices(
@@ -145,7 +146,7 @@ object Aimbot : Module("Aimbot", Category.COMBAT) {
 
         simPlayer.rotationYaw = (currentRotation ?: player.rotation).yaw
 
-        repeat(predictClientMovement) {
+        repeat(randomDelay(predictClientMovement.first, predictClientMovement.last - 1)) {
             simPlayer.tick()
         }
 
