@@ -7,14 +7,14 @@ package net.ccbluex.liquidbounce.features.command.commands
 
 import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
 import net.ccbluex.liquidbounce.features.command.Command
-import net.ccbluex.liquidbounce.features.module.ModuleCategory
+import net.ccbluex.liquidbounce.features.module.Category
 
 object PanicCommand : Command("panic") {
     /**
      * Execute commands with provided [args]
      */
     override fun execute(args: Array<String>) {
-        var modules = moduleManager.modules.filter { it.state }
+        var modules = moduleManager.filter { it.state }
         val msg: String
 
         if (args.size > 1 && args[1].isNotEmpty()) {
@@ -22,12 +22,12 @@ object PanicCommand : Command("panic") {
                 "all" -> msg = "all"
 
                 "nonrender" -> {
-                    modules = modules.filter { it.category != ModuleCategory.RENDER }
+                    modules = modules.filter { it.category != Category.RENDER }
                     msg = "all non-render"
                 }
 
                 else -> {
-                    val categories = ModuleCategory.values().filter { it.displayName.equals(args[1], true) }
+                    val categories = Category.entries.filter { it.displayName.equals(args[1], true) }
 
                     if (categories.isEmpty()) {
                         chat("Category ${args[1]} not found")
@@ -56,6 +56,7 @@ object PanicCommand : Command("panic") {
         return when (args.size) {
             1 -> listOf("all", "nonrender", "combat", "player", "movement", "render", "world", "misc", "exploit", "fun")
                 .filter { it.startsWith(args[0], true) }
+
             else -> emptyList()
         }
     }

@@ -5,28 +5,39 @@
  */
 package net.ccbluex.liquidbounce.features.special
 
-import com.google.gson.JsonObject
-import com.google.gson.JsonParser
 import com.jagrosh.discordipc.IPCClient
 import com.jagrosh.discordipc.IPCListener
 import com.jagrosh.discordipc.entities.RichPresence
 import com.jagrosh.discordipc.entities.pipe.PipeStatus
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_CLOUD
 import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
-import net.ccbluex.liquidbounce.LiquidBounce.clientVersionText
 import net.ccbluex.liquidbounce.LiquidBounce.MINECRAFT_VERSION
+import net.ccbluex.liquidbounce.LiquidBounce.clientCommit
+import net.ccbluex.liquidbounce.LiquidBounce.clientVersionText
 import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
-import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
-import net.ccbluex.liquidbounce.utils.MinecraftInstance
-import net.ccbluex.liquidbounce.utils.misc.HttpUtils.get
+import net.ccbluex.liquidbounce.config.Configurable
+import net.ccbluex.liquidbounce.event.ClientShutdownEvent
+import net.ccbluex.liquidbounce.event.Listenable
+import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.utils.client.ClientUtils.LOGGER
+import net.ccbluex.liquidbounce.utils.client.MinecraftInstance
+import net.ccbluex.liquidbounce.utils.client.ServerUtils
+import net.ccbluex.liquidbounce.utils.io.HttpClient
+import net.ccbluex.liquidbounce.utils.io.get
+import net.ccbluex.liquidbounce.utils.io.jsonBody
+import net.ccbluex.liquidbounce.utils.kotlin.SharedScopes
 import org.json.JSONObject
 import java.io.IOException
 import java.time.OffsetDateTime
-import kotlin.concurrent.thread
 
-object ClientRichPresence : MinecraftInstance() {
+object ClientRichPresence : Configurable("DiscordRPC"), MinecraftInstance, Listenable {
 
-    var showRichPresenceValue = true
+    var showRPCValue by boolean("ShowRichPresence", true)
+    var showRPCServerIP by boolean("ShowRichPresenceServerIP", true)
+    var showRPCModulesCount by boolean("ShowRichPresenceModulesCount", true)
+    var customRPCText by text("RichPresenceCustomText", "")
 
     // IPC Client
     private var ipcClient: IPCClient? = null
@@ -47,38 +58,35 @@ object ClientRichPresence : MinecraftInstance() {
 
             loadConfiguration()
 
-            ipcClient = IPCClient(appID)
-            ipcClient?.setListener(object : IPCListener {
+            ipcClient = IPCClient(appID).apply {
+                setListener(object : IPCListener {
 
-                /**
-                 * Fired whenever an [IPCClient] is ready and connected to Discord.
-                 *
-                 * @param client The now ready IPCClient.
-                 */
-                override fun onReady(client: IPCClient?) {
-                    thread {
-                        while (running) {
-                            update()
-
-                            try {
-                                Thread.sleep(1000L)
-                            } catch (ignored: InterruptedException) {
+                    /**
+                     * Fired whenever an [IPCClient] is ready and connected to Discord.
+                     *
+                     * @param client The now ready IPCClient.
+                     */
+                    override fun onReady(client: IPCClient?) {
+                        SharedScopes.IO.launch {
+                            while (running) {
+                                update()
+                                delay(1000L)
                             }
                         }
                     }
-                }
 
-                /**
-                 * Fired whenever an [IPCClient] has closed.
-                 *
-                 * @param client The now closed IPCClient.
-                 * @param json A [JSONObject] with close data.
-                 */
-                override fun onClose(client: IPCClient?, json: JSONObject?) {
-                    running = false
-                }
+                    /**
+                     * Fired whenever an [IPCClient] has closed.
+                     *
+                     * @param client The now closed IPCClient.
+                     * @param json A [JSONObject] with close data.
+                     */
+                    override fun onClose(client: IPCClient?, json: JSONObject?) {
+                        running = false
+                    }
 
-            })
+                })
+            }
             ipcClient?.connect()
         } catch (e: Throwable) {
             LOGGER.error("Failed to setup Discord RPC.", e)
@@ -90,22 +98,36 @@ object ClientRichPresence : MinecraftInstance() {
      * Update rich presence
      */
     fun update() {
-        val builder = RichPresence.Builder()
+        if (ipcClient?.status != PipeStatus.CONNECTED) return
 
-        // Set playing time
-        builder.setStartTimestamp(timestamp)
+        val builder = RichPresence.Builder().apply {
+            // Set playing time
+            setStartTimestamp(timestamp)
 
-        // Check assets contains logo and set logo
-        if ("logo" in assets)
-            builder.setLargeImage(assets["logo"], "MC $MINECRAFT_VERSION - $CLIENT_NAME $clientVersionText")
+            // Check assets contains logo and set logo
+            assets["logo"]?.let {
+                setLargeImage(it, "MC $MINECRAFT_VERSION - $CLIENT_NAME $clientVersionText $clientCommit")
+            }
 
-        // Check user is in-game
-        if (mc.thePlayer != null) {
-            val serverData = mc.currentServerData
+            // Check user is in-game
+            mc.thePlayer?.let {
+                val serverData = mc.currentServerData
 
-            // Set display info
-            builder.setDetails("Server: ${if (mc.isIntegratedServerRunning || serverData == null) "Singleplayer" else serverData.serverIP}")
-            builder.setState("Enabled ${moduleManager.modules.count { it.state }} of ${moduleManager.modules.size} modules")
+                // Set server info
+                if (showRPCServerIP) {
+                    setDetails(customRPCText.ifEmpty {
+                        "Server: ${
+                            if (mc.isIntegratedServerRunning || serverData == null) "Singleplayer"
+                            else ServerUtils.hideSensitiveInformation(serverData.serverIP)
+                        }"
+                    })
+                }
+
+                // Set modules count info
+                if (showRPCModulesCount) {
+                    setState("Enabled ${moduleManager.count { it.state }} of ${moduleManager.size} modules")
+                }
+            }
         }
 
         // Check ipc client is connected and send rpc
@@ -128,26 +150,24 @@ object ClientRichPresence : MinecraftInstance() {
         }
     }
 
+    private val onClientShutdown = handler<ClientShutdownEvent> {
+        shutdown()
+    }
+
     /**
      * Load configuration from web
      *
      * @throws IOException If reading failed
      */
     private fun loadConfiguration() {
-        val (response, _) = get("$CLIENT_CLOUD/discord.json")
-
-        // Read from web and convert to json object
-        val json = JsonParser().parse(response)
-
-        if (json !is JsonObject)
-            return
+        val discordConf = HttpClient.get("$CLIENT_CLOUD/discord.json").jsonBody<DiscordConfiguration>() ?: return
 
         // Check has app id
-        if (json.has("appID"))
-            appID = json["appID"].asLong
+        discordConf.appID?.let { appID = it }
 
         // Import all asset names
-        for ((key, value) in json["assets"].asJsonObject.entrySet())
-            assets[key] = value.asString
+        assets += discordConf.assets
     }
 }
+
+private class DiscordConfiguration(val appID: Long?, val assets: Map<String, String>)

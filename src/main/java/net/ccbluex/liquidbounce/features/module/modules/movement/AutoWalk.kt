@@ -5,16 +5,15 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
-import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.UpdateEvent
+import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.minecraft.client.settings.GameSettings
 
-object AutoWalk : Module("AutoWalk", ModuleCategory.MOVEMENT, subjective = true, gameDetecting = false, hideModule = false) {
+object AutoWalk : Module("AutoWalk", Category.MOVEMENT, subjective = true, gameDetecting = false) {
 
-    @EventTarget
-    fun onUpdate(event: UpdateEvent) {
+    val onUpdate = handler<UpdateEvent> {
         mc.gameSettings.keyBindForward.pressed = true
     }
 

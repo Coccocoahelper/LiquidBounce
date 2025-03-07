@@ -13,7 +13,7 @@ import io.netty.handler.codec.http.websocketx.CloseWebSocketFrame
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame
 import io.netty.handler.codec.http.websocketx.WebSocketClientHandshaker
 import io.netty.handler.codec.http.websocketx.WebSocketHandshakeException
-import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
+import net.ccbluex.liquidbounce.utils.client.ClientUtils.LOGGER
 
 class ClientHandler(val client: Client, private val handshaker: WebSocketClientHandshaker) : SimpleChannelInboundHandler<Any>() {
 
@@ -58,7 +58,7 @@ class ClientHandler(val client: Client, private val handshaker: WebSocketClientH
     override fun exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable) {
         LOGGER.error("LiquidChat error", cause)
         client.onError(cause)
-        if(!handshakeFuture.isDone) handshakeFuture.setFailure(cause)
+        if (!handshakeFuture.isDone) handshakeFuture.setFailure(cause)
         ctx.close()
     }
 
@@ -76,12 +76,12 @@ class ClientHandler(val client: Client, private val handshaker: WebSocketClientH
     override fun channelRead0(ctx: ChannelHandlerContext, msg: Any) {
         val channel = ctx.channel()
 
-        if(!handshaker.isHandshakeComplete) {
+        if (!handshaker.isHandshakeComplete) {
             try{
                 handshaker.finishHandshake(channel, msg as FullHttpResponse)
                 handshakeFuture.setSuccess()
 
-            }catch (exception: WebSocketHandshakeException) {
+            } catch (exception: WebSocketHandshakeException) {
                 handshakeFuture.setFailure(exception)
             }
 

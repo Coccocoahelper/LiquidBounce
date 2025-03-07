@@ -11,7 +11,7 @@ import net.ccbluex.liquidbounce.script.remapper.injection.utils.NodeUtils;
 import net.minecraft.launchwrapper.IClassTransformer;
 import org.objectweb.asm.tree.*;
 
-import static net.ccbluex.liquidbounce.utils.MinecraftInstance.mc;
+import static net.ccbluex.liquidbounce.utils.client.MinecraftInstance.mc;
 import static org.objectweb.asm.Opcodes.*;
 
 /**
@@ -29,7 +29,7 @@ public class ForgeNetworkTransformer implements IClassTransformer {
      */
     @Override
     public byte[] transform(String name, String transformedName, byte[] basicClass) {
-        if(name.equals("net.minecraftforge.fml.common.network.handshake.NetworkDispatcher")) {
+        if (name.equals("net.minecraftforge.fml.common.network.handshake.NetworkDispatcher")) {
             try {
                 final ClassNode classNode = ClassUtils.INSTANCE.toClassNode(basicClass);
 
@@ -46,12 +46,12 @@ public class ForgeNetworkTransformer implements IClassTransformer {
                 });
 
                 return ClassUtils.INSTANCE.toBytes(classNode);
-            }catch(final Throwable throwable) {
+            } catch(final Throwable throwable) {
                 throwable.printStackTrace();
             }
         }
 
-        if(name.equals("net.minecraftforge.fml.common.network.handshake.HandshakeMessageHandler")) {
+        if (name.equals("net.minecraftforge.fml.common.network.handshake.HandshakeMessageHandler")) {
             try {
                 final ClassNode classNode = ClassUtils.INSTANCE.toClassNode(basicClass);
 
@@ -70,7 +70,7 @@ public class ForgeNetworkTransformer implements IClassTransformer {
                 });
 
                 return ClassUtils.INSTANCE.toBytes(classNode);
-            }catch(final Throwable throwable) {
+            } catch(final Throwable throwable) {
                 throwable.printStackTrace();
             }
         }

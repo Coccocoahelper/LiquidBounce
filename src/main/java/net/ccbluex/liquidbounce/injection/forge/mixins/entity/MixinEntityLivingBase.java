@@ -6,18 +6,22 @@
 package net.ccbluex.liquidbounce.injection.forge.mixins.entity;
 
 import net.ccbluex.liquidbounce.event.EventManager;
+import net.ccbluex.liquidbounce.event.EventState;
 import net.ccbluex.liquidbounce.event.JumpEvent;
-import net.ccbluex.liquidbounce.features.module.modules.movement.AirJump;
 import net.ccbluex.liquidbounce.features.module.modules.movement.LiquidWalk;
 import net.ccbluex.liquidbounce.features.module.modules.movement.NoJumpDelay;
 import net.ccbluex.liquidbounce.features.module.modules.movement.Sprint;
 import net.ccbluex.liquidbounce.features.module.modules.render.Animations;
 import net.ccbluex.liquidbounce.features.module.modules.render.Rotations;
-import net.ccbluex.liquidbounce.utils.MovementUtils;
-import net.ccbluex.liquidbounce.utils.Rotation;
-import net.ccbluex.liquidbounce.utils.RotationUtils;
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffolds.Scaffold;
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffolds.Tower;
+import net.ccbluex.liquidbounce.utils.movement.MovementUtils;
+import net.ccbluex.liquidbounce.utils.rotation.Rotation;
+import net.ccbluex.liquidbounce.utils.rotation.RotationSettings;
+import net.ccbluex.liquidbounce.utils.rotation.RotationUtils;
 import net.ccbluex.liquidbounce.utils.extensions.MathExtensionsKt;
 import net.minecraft.block.Block;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.item.ItemStack;
@@ -73,11 +77,13 @@ public abstract class MixinEntityLivingBase extends MixinEntity {
      */
     @Overwrite
     protected void jump() {
-        final JumpEvent jumpEvent = new JumpEvent(getJumpUpwardsMotion());
-        EventManager.INSTANCE.callEvent(jumpEvent);
-        if (jumpEvent.isCancelled()) return;
+        final JumpEvent prejumpEvent = new JumpEvent(getJumpUpwardsMotion(), EventState.PRE);
+        if ((Object) this == Minecraft.getMinecraft().thePlayer) {
+            EventManager.INSTANCE.call(prejumpEvent);
+            if (prejumpEvent.isCancelled()) return;
+        }
 
-        motionY = jumpEvent.getMotion();
+        motionY = prejumpEvent.getMotion();
 
         if (isPotionActive(Potion.jump))
             motionY += (float) (getActivePotionEffect(Potion.jump).getAmplifier() + 1) * 0.1F;
@@ -87,12 +93,13 @@ public abstract class MixinEntityLivingBase extends MixinEntity {
 
             final RotationUtils rotationUtils = RotationUtils.INSTANCE;
             final Rotation currentRotation = rotationUtils.getCurrentRotation();
-            if (currentRotation != null && rotationUtils.getStrafe()) {
+            final RotationSettings rotationData = rotationUtils.getActiveSettings();
+            if (currentRotation != null && rotationData != null && rotationData.getStrafe()) {
                 fixedYaw = currentRotation.getYaw();
             }
 
             final Sprint sprint = Sprint.INSTANCE;
-            if (sprint.handleEvents() && sprint.getAllDirections() && sprint.getJumpDirections()) {
+            if (sprint.handleEvents() && sprint.getMode().equals("Vanilla") && sprint.getAllDirections() && sprint.getJumpDirections()) {
                 fixedYaw += MathExtensionsKt.toDegreesF(MovementUtils.INSTANCE.getDirection()) - this.rotationYaw;
             }
 
@@ -102,20 +109,20 @@ public abstract class MixinEntityLivingBase extends MixinEntity {
         }
 
         isAirBorne = true;
+
+        if ((Object) this == Minecraft.getMinecraft().thePlayer) {
+            final JumpEvent postjumpEvent = new JumpEvent((float) motionY, EventState.POST);
+            EventManager.INSTANCE.call(postjumpEvent);
+        }
     }
 
     @Inject(method = "onLivingUpdate", at = @At("HEAD"))
     private void headLiving(CallbackInfo callbackInfo) {
-        if (NoJumpDelay.INSTANCE.handleEvents()) jumpTicks = 0;
+        if (NoJumpDelay.INSTANCE.handleEvents() || Scaffold.INSTANCE.handleEvents() && Tower.INSTANCE.getTowerModeValues().equals("Pulldown")) jumpTicks = 0;
     }
 
     @Inject(method = "onLivingUpdate", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/EntityLivingBase;isJumping:Z", ordinal = 1))
     private void onJumpSection(CallbackInfo callbackInfo) {
-        if (AirJump.INSTANCE.handleEvents() && isJumping && jumpTicks == 0) {
-            jump();
-            jumpTicks = 10;
-        }
-
         final LiquidWalk liquidWalk = LiquidWalk.INSTANCE;
 
         if (liquidWalk.handleEvents() && !isJumping && !isSneaking() && isInWater() && liquidWalk.getMode().equals("Swim")) {

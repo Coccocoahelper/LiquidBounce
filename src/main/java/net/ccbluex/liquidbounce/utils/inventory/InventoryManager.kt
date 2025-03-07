@@ -5,151 +5,161 @@
  */
 package net.ccbluex.liquidbounce.utils.inventory
 
-import kotlinx.coroutines.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import net.ccbluex.liquidbounce.config.Configurable
+import net.ccbluex.liquidbounce.event.Listenable
+import net.ccbluex.liquidbounce.event.async.loopSequence
 import net.ccbluex.liquidbounce.features.module.modules.combat.AutoArmor
 import net.ccbluex.liquidbounce.features.module.modules.player.InventoryCleaner
 import net.ccbluex.liquidbounce.features.module.modules.world.ChestStealer
-import net.ccbluex.liquidbounce.utils.ClientUtils.displayChatMessage
-import net.ccbluex.liquidbounce.utils.MinecraftInstance
-import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
-import net.ccbluex.liquidbounce.utils.MovementUtils.serverOnGround
+import net.ccbluex.liquidbounce.utils.client.MinecraftInstance
+import net.ccbluex.liquidbounce.utils.extensions.isMoving
 import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils.serverOpenInventory
-import net.ccbluex.liquidbounce.value.BoolValue
-import net.ccbluex.liquidbounce.value.IntegerValue
+import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils.timeSinceClosedInventory
+import net.ccbluex.liquidbounce.utils.movement.MovementUtils.serverOnGround
 import net.minecraft.client.gui.inventory.GuiInventory
+import java.awt.Color
 
-object InventoryManager: MinecraftInstance() {
+object InventoryManager : Configurable("InventoryManager"), MinecraftInstance, Listenable {
 
-	// Shared no move click values
-	val noMoveValue = BoolValue("NoMoveClicks", false)
-		val noMoveAirValue = BoolValue("NoClicksInAir", false) { noMoveValue.get() }
-		val noMoveGroundValue = BoolValue("NoClicksOnGround", true) { noMoveValue.get() }
+    // Shared no move click values
+    val noMoveValue = boolean("NoMoveClicks", false)
+    val noMoveAirValue = boolean("NoClicksInAir", false) { noMoveValue.get() }
+    val noMoveGroundValue = boolean("NoClicksOnGround", true) { noMoveValue.get() }
 
-	// Shared values between AutoArmor and InventoryCleaner
-	val invOpenValue = BoolValue("InvOpen", false)
-		val simulateInventoryValue = BoolValue("SimulateInventory", true) { !invOpenValue.get() }
-		val autoCloseValue = BoolValue("AutoClose", false) { invOpenValue.get() }
+    // Shared values between AutoArmor and InventoryCleaner
+    val invOpenValue = boolean("InvOpen", false)
+    val simulateInventoryValue = boolean("SimulateInventory", true) { !invOpenValue.get() }
+    val autoCloseValue = boolean("AutoClose", false) { invOpenValue.get() }
 
-		val startDelayValue = IntegerValue("StartDelay", 0, 0..500)
-			{ invOpenValue.get() || simulateInventoryValue.get() }
-		val closeDelayValue = IntegerValue("CloseDelay", 0, 0..500)
-			{ if (invOpenValue.get()) autoCloseValue.get() else simulateInventoryValue.get() }
+    val postInventoryCloseDelayValue = int("PostInventoryCloseDelay", 0, 0..500)
+    val startDelayValue = int("StartDelay", 0, 0..500)
+    { invOpenValue.get() || simulateInventoryValue.get() }
+    val closeDelayValue = int("CloseDelay", 0, 0..500)
+    { if (invOpenValue.get()) autoCloseValue.get() else simulateInventoryValue.get() }
 
-	// Undetectable
-	val undetectableValue = BoolValue("Undetectable", false)
+    // Shared highlight slot values between AutoArmor and InventoryCleaner
+    val highlightSlotValue = boolean("Highlight-Slot", false).subjective()
 
-	private lateinit var inventoryWorker: Job
+    // Shared highlight slot background values between AutoArmor and InventoryCleaner
+    val backgroundColor = color("BackgroundColor", Color(128, 128, 128)) { highlightSlotValue.get() }.subjective()
 
-	var hasScheduledInLastLoop = false
-		set(value) {
-			// If hasScheduled gets set to true any time during the searching loop, inventory can be closed when the loop finishes.
-			if (value) canCloseInventory = true
+    // Shared highlight slot border values between AutoArmor and InventoryCleaner
+    val borderStrength = int("Border-Strength", 3, 1..5) { highlightSlotValue.get() }.subjective()
+    val borderColor = color("BorderColor", Color(128, 128, 128)) { highlightSlotValue.get() }.subjective()
 
-			field = value
-		}
+    // Undetectable
+    val undetectableValue = boolean("Undetectable", false)
 
-	private var canCloseInventory = false
+    var hasScheduledInLastLoop = false
+        set(value) {
+            // If hasScheduled gets set to true any time during the searching loop, inventory can be closed when the loop finishes.
+            if (value) canCloseInventory = true
 
-	private suspend fun manageInventory() {
+            field = value
+        }
 
-		/**
-		 * ChestStealer actions
-		 */
+    private var canCloseInventory = false
 
-		ChestStealer.stealFromChest()
+    // ChestStealer Highlight
+    var chestStealerCurrentSlot = -1
+    var chestStealerLastSlot = -1
 
-		/**
-		 * AutoArmor actions
-		 */
+    // InventoryCleaner Highlight
+    var invCleanerCurrentSlot = -1
+    var invCleanerLastSlot = -1
 
-		AutoArmor.equipFromHotbar()
+    // AutoArmor Highlight
+    var autoArmorCurrentSlot = -1
+    var autoArmorLastSlot = -1
 
-		// Following actions require inventory / simulated inventory, ...
+    val passedPostInventoryCloseDelay
+        get() = System.currentTimeMillis() - timeSinceClosedInventory >= postInventoryCloseDelayValue.get()
 
-		// TODO: This could be at start of each action?
-		// Don't wait for NoMove not to be violated, check if there is anything to equip from hotbar and such by looping again
-		if (!canClickInventory() || (invOpenValue.get() && mc.currentScreen !is GuiInventory))
-			return
+    private val managerLoop = loopSequence(dispatcher = Dispatchers.Default, priority = 100) {
+        /**
+         * ChestStealer actions
+         */
+        ChestStealer.stealFromChest()
 
-		canCloseInventory = false
+        /**
+         * AutoArmor actions
+         */
+        AutoArmor.equipFromHotbar()
 
-		while (true) {
-			hasScheduledInLastLoop = false
+        // Following actions require inventory / simulated inventory, ...
 
-			AutoArmor.equipFromInventory()
+        // TODO: This could be at start of each action?
+        // Don't wait for NoMove not to be violated, check if there is anything to equip from hotbar and such by looping again
+        if (!canClickInventory() || (invOpenValue.get() && mc.currentScreen !is GuiInventory)) {
+            delay(50)
+            return@loopSequence
+        }
 
-			/**
-			 * InventoryCleaner actions
-			 */
+        canCloseInventory = false
 
-			// Repair useful equipment by merging in the crafting grid
-			InventoryCleaner.repairEquipment()
+        AutoArmor.equipFromInventory()
 
-			// Compact multiple small stacks into one to free up inventory space
-			InventoryCleaner.mergeStacks()
+        /**
+         * InventoryCleaner actions
+         */
 
-			// Sort hotbar (with useful items without even dropping bad items first)
-			InventoryCleaner.sortHotbar()
+        // Repair useful equipment by merging in the crafting grid
+        InventoryCleaner.repairEquipment()
 
-			// Drop bad items to free up inventory space
-			InventoryCleaner.dropGarbage()
+        // Compact multiple small stacks into one to free up inventory space
+        InventoryCleaner.mergeStacks()
 
-			// Stores which action should be executed to close open inventory or simulated inventory
-			// If no clicks were scheduled throughout any iteration (canCloseInventory == false), then it is null, to prevent closing inventory all the time
-			closingAction ?: return
+        // Sort hotbar (with useful items without even dropping bad items first)
+        InventoryCleaner.sortHotbar()
 
-			// Prepare for closing the inventory
-			delay(closeDelayValue.get().toLong())
+        // Drop bad items to free up inventory space
+        InventoryCleaner.dropGarbage()
 
-			// Try to search through inventory one more time, only close when no actions were scheduled in current iteration
-			if (!hasScheduledInLastLoop) {
-				closingAction?.invoke()
-				return
-			}
-		}
-	}
+        // Stores which action should be executed to close open inventory or simulated inventory
+        // If no clicks were scheduled throughout any iteration (canCloseInventory == false), then it is null, to prevent closing inventory all the time
+        val action = closingAction ?: run {
+            delay(50)
+            return@loopSequence
+        }
 
-	private val closingAction
-		get() = when {
-			// Check if any click was scheduled since inventory got open
-			!canCloseInventory -> null
+        // Prepare for closing the inventory
+        delay(closeDelayValue.get().toLong())
 
-			// Prevent any other container guis from getting closed
-			mc.thePlayer?.openContainer?.windowId != 0 -> null
+        // Try to search through inventory one more time, only close when no actions were scheduled in current iteration
+        if (!hasScheduledInLastLoop) {
+            action.run()
+        }
+    }
 
-			// Check if open inventory should be closed
-			mc.currentScreen is GuiInventory && invOpenValue.get() && autoCloseValue.get() ->
-				({ mc.thePlayer?.closeScreen() })
+    private val closingAction: Runnable?
+        get() = when {
+            // Check if any click was scheduled since inventory got open
+            !canCloseInventory -> null
 
-			// Check if simulated inventory should be closed
-			mc.currentScreen !is GuiInventory && simulateInventoryValue.get() && serverOpenInventory ->
-				({ serverOpenInventory = false })
+            // Prevent any other container guis from getting closed
+            mc.thePlayer?.openContainer?.windowId != 0 -> null
 
-			else -> null
-		}
+            // Check if open inventory should be closed
+            mc.currentScreen is GuiInventory && invOpenValue.get() && autoCloseValue.get() ->
+                Runnable { mc.thePlayer?.closeScreen() }
 
-	fun canClickInventory(closeWhenViolating: Boolean = false) =
-		if (noMoveValue.get() && isMoving && if (serverOnGround) noMoveGroundValue.get() else noMoveAirValue.get()) {
+            // Check if simulated inventory should be closed
+            mc.currentScreen !is GuiInventory && simulateInventoryValue.get() && serverOpenInventory ->
+                Runnable { serverOpenInventory = false }
 
-			// NoMove check is violated, close simulated inventory
-			if (closeWhenViolating)
-				serverOpenInventory = false
+            else -> null
+        }
 
-			false
-		} else true // Simulated inventory will get reopen before a window click, delaying it by start delay
+    fun canClickInventory(closeWhenViolating: Boolean = false) =
+        if (noMoveValue.get() && mc.thePlayer.isMoving && if (serverOnGround) noMoveGroundValue.get() else noMoveAirValue.get()) {
 
-	fun startCoroutine() {
-		inventoryWorker = CoroutineScope(Dispatchers.Default).launch {
-			while (isActive) {
-				runCatching {
-					manageInventory()
-				}.onFailure {
-					// TODO: Remove when stable, probably in b86
-					displayChatMessage("§cReworked coroutine inventory management had ran into an issue! Please report this: ${it.message ?: it.cause}")
+            // NoMove check is violated, close simulated inventory
+            if (closeWhenViolating)
+                serverOpenInventory = false
 
-					it.printStackTrace()
-				}
-			}
-		}
-	}
+            false
+        } else true // Simulated inventory will get reopen before a window click, delaying it by start delay
+
 }

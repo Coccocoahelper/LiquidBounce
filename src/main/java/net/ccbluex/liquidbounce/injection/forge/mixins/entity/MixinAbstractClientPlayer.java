@@ -22,7 +22,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.Objects;
 
-import static net.ccbluex.liquidbounce.utils.MinecraftInstance.mc;
+import static net.ccbluex.liquidbounce.utils.client.MinecraftInstance.mc;
 
 @Mixin(AbstractClientPlayer.class)
 @SideOnly(Side.CLIENT)
@@ -39,7 +39,7 @@ public abstract class MixinAbstractClientPlayer extends MixinEntityPlayer {
             });
         }
 
-        if(capeInfo != null && capeInfo.isCapeAvailable()) {
+        if (capeInfo != null && capeInfo.isCapeAvailable()) {
             callbackInfoReturnable.setReturnValue(capeInfo.getResourceLocation());
         }
     }

@@ -5,97 +5,93 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player
 
-import net.ccbluex.liquidbounce.event.EventTarget
-import net.ccbluex.liquidbounce.event.UpdateEvent
+import net.ccbluex.liquidbounce.event.GameTickEvent
+import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.ModuleCategory
-import net.ccbluex.liquidbounce.value.IntegerValue
-import net.ccbluex.liquidbounce.value.ListValue
+import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils
+import net.ccbluex.liquidbounce.utils.inventory.SilentHotbar
+import net.ccbluex.liquidbounce.utils.inventory.hotBarSlot
 import net.minecraft.init.Items
 import net.minecraft.item.ItemStack
 
-object AutoPlay : Module("AutoPlay", ModuleCategory.PLAYER, gameDetecting = false, hideModule = false) {
+object AutoPlay : Module("AutoPlay", Category.PLAYER, gameDetecting = false) {
 
-    private val mode by ListValue("Mode", arrayOf("BlocksMC", "HypixelSkywars"), "BlocksMC")
+    private val mode by choices("Mode", arrayOf("Paper", "Hypixel"), "Paper")
 
-    // Hypixel Skywars AutoPlay Settings
-    private val skywarsMode by ListValue("SkywarsMode", arrayOf("Normal", "Insane"), "Normal") {
-        mode == "HypixelSkywars"
+    // Hypixel Settings
+    private val hypixelMode by choices("HypixelMode", arrayOf("Skywars", "Bedwars"), "Skywars") {
+        mode == "Hypixel"
+    }
+    private val skywarsMode by choices("SkywarsMode", arrayOf("SoloNormal", "SoloInsane"), "SoloNormal") {
+        hypixelMode == "Skywars"
+    }
+    private val bedwarsMode by choices("BedwarsMode", arrayOf("Solo", "Double", "Trio", "Quad"), "Solo") {
+        hypixelMode == "Bedwars"
     }
 
-    private val delay by IntegerValue("Delay", 50, 0..200)
+    private val delay by int("Delay", 50, 0..200)
 
     private var delayTick = 0
 
     /**
      * Update Event
      */
-    @EventTarget
-    fun onUpdate(event: UpdateEvent) {
-        val player = mc.thePlayer ?: return
+    val onGameTick = handler<GameTickEvent> {
+        val player = mc.thePlayer ?: return@handler
 
-        if (!player.isAirBorne || !player.inventory.hasItemStack(ItemStack(Items.paper))) {
-            return
+        if (!playerInGame() || !player.inventory.hasItemStack(ItemStack(Items.paper))) {
+            if (delayTick > 0)
+                delayTick = 0
+
+            return@handler
         } else {
             delayTick++
         }
 
         when (mode) {
-            "BlocksMC" -> {
-                val paper = findPaper(36, 45)
+            "Paper" -> {
+                val paper = InventoryUtils.findItem(36, 44, Items.paper) ?: return@handler
 
-                if (paper == -1) {
-                    return
-                }
-
-                mc.thePlayer.inventory.currentItem = (paper - 36)
-                mc.playerController.updateController()
+                SilentHotbar.selectSlotSilently(this, paper, immediate = true, resetManually = true)
 
                 if (delayTick >= delay) {
-                    mc.playerController.sendUseItem(mc.thePlayer, mc.theWorld, mc.thePlayer.inventoryContainer.getSlot(paper).stack)
+                    mc.playerController.sendUseItem(player, mc.theWorld, player.hotBarSlot(paper).stack)
                     delayTick = 0
                 }
             }
 
-            "HypixelSkywars" -> {
+            "Hypixel" -> {
                 if (delayTick >= delay) {
-                    when (skywarsMode) {
-                        "Normal" -> player.sendChatMessage("/play solo_normal")
-                        "Insane" -> player.sendChatMessage("/play solo_insane")
+                    when (hypixelMode.lowercase()) {
+                        "skywars" -> when (skywarsMode) {
+                            "SoloNormal" -> player.sendChatMessage("/play solo_normal")
+                            "SoloInsane" -> player.sendChatMessage("/play solo_insane")
+                        }
+
+                        "bedwars" -> when (bedwarsMode) {
+                            "Solo" -> player.sendChatMessage("/play bedwars_eight_one")
+                            "Double" -> player.sendChatMessage("/play bedwars_eight_two")
+                            "Trio" -> player.sendChatMessage("/play bedwars_four_three")
+                            "Quad" -> player.sendChatMessage("/play bedwars_four_four")
+                        }
                     }
                     delayTick = 0
-                }
-            }
-
-            "MinemenClub" -> {
-                if (player.ticksExisted % 15 == 1) {
-                    val paper = findPaper(36, 45)
-                    if (paper == -1) return
-
-                    mc.thePlayer.rotationPitch = -90f
-                    mc.thePlayer.inventory.currentItem = (paper - 36)
-                    mc.playerController.updateController()
-                    if (delayTick >= delay) {
-                        mc.rightClickMouse()
-                    }
                 }
             }
         }
     }
 
     /**
-     * Find paper in inventory
+     * Check whether player is in game or not
      */
-    private fun findPaper(startSlot: Int, endSlot: Int): Int {
-        for (i in startSlot until endSlot) {
-            val stack = mc.thePlayer?.inventoryContainer?.getSlot(i)?.stack
-            if (stack != null) {
-                if (stack.item == Items.paper) {
-                    return i
-                }
-            }
-        }
-        return -1
+    private fun playerInGame(): Boolean {
+        val player = mc.thePlayer ?: return false
+
+        return player.ticksExisted >= 20
+                && (player.capabilities.isFlying
+                || player.capabilities.allowFlying
+                || player.capabilities.disableDamage)
     }
 
     /**

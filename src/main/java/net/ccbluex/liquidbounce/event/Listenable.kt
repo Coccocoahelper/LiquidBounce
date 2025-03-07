@@ -5,16 +5,31 @@
  */
 package net.ccbluex.liquidbounce.event
 
-import java.lang.reflect.Method
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
+import net.ccbluex.liquidbounce.event.async.launchSequence
 
 interface Listenable {
-    fun handleEvents(): Boolean
+    fun handleEvents(): Boolean = parent?.handleEvents() ?: true
+
+    val subListeners: Array<Listenable>
+        get() = emptyArray()
+
+    val parent: Listenable?
+        get() = null
 }
 
-@Target(AnnotationTarget.FUNCTION, AnnotationTarget.PROPERTY_GETTER, AnnotationTarget.PROPERTY_SETTER)
-annotation class EventTarget(val ignoreCondition: Boolean = false, val priority: Int = 0)
-
-internal class EventHook(val eventClass: Listenable, val method: Method, eventTarget: EventTarget) {
-    val isIgnoreCondition = eventTarget.ignoreCondition
-    val priority = eventTarget.priority
+inline fun <reified T : Event> Listenable.handler(
+    always: Boolean = false,
+    priority: Byte = 0,
+    noinline action: (T) -> Unit
+) {
+    EventManager.registerEventHook(T::class.java, EventHook(this, always, priority, action))
 }
+
+inline fun <reified T : Event> Listenable.handler(
+    dispatcher: CoroutineDispatcher,
+    always: Boolean = false,
+    priority: Byte = 0,
+    crossinline action: suspend CoroutineScope.(T) -> Unit
+) = handler<T>(always, priority) { launchSequence(dispatcher, always) { action(it) } }

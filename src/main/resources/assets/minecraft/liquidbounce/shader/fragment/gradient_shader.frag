@@ -1,34 +1,28 @@
-#version 130
+#version 120
 
 uniform float offset;
 uniform vec2 strength;
-uniform vec4 color1;
-uniform vec4 color2;
-uniform vec4 color3;
-uniform vec4 color4;
+uniform float speed;
+uniform int maxColors;
+uniform vec4 colors[9];
 
-float hermite(float edge0, float edge1, float x) {
-    return edge0 + (edge1 - edge0) * (x * x * (3.0 - 2.0 * x));
-}
-
+// TODO: Fix Random Stutter
 void main() {
     vec2 pos = gl_FragCoord.xy * strength;
-    float param = mod(pos.x + pos.y + offset, 1.0);
+    float param = mod(pos.x + pos.y + offset * speed, 1.0);
 
-    float segment = 1.0 / 4.0;
+    // Divide the range [0, 1] based on maxColors
+    float segment = 1.0 / float(maxColors);
     float index = param / segment;
-    int idx1 = int(index);
     float frac = fract(index);
 
-    vec4 gradientColor = mix(color1, color2, hermite(0.0, 1.0, frac));
+    float idx1 = floor(index);
+    float idx2 = idx1 + 1.0;
 
-    if (idx1 == 1) {
-        gradientColor = mix(color2, color3, hermite(0.0, 1.0, frac));
-    } else if (idx1 == 2) {
-        gradientColor = mix(color3, color4, hermite(0.0, 1.0, frac));
-    } else if (idx1 == 3) {
-        gradientColor = mix(color4, color1, hermite(0.0, 1.0, frac));
-    }
+    idx1 = mod(idx1, float(maxColors));
+    idx2 = mod(idx2, float(maxColors));
+
+    vec4 gradientColor = mix(colors[int(idx1)], colors[int(idx2)], smoothstep(0.0, 1.0, frac));
 
     gl_FragColor = gradientColor;
 }
