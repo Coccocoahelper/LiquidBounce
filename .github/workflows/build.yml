@@ -22,11 +22,8 @@ jobs:
           cache: "gradle"
       - name: Build
         run: ./gradlew build
-      - name: Prepare artifact for upload
-        run: |
-          cd build/libs
-          export JAR=$(find . -regex '.*liquidbounce-b[0-9|.]*\.jar')
-          export LB_VERSION=$(echo $JAR | sed -r 's/.\/liquidbounce-([a-zA-Z][0-9]+)\.jar/\1/')
+      - name: Rename build artifacts
+        run: mv build/libs/liquidbounce-*.jar build/libs/liquidbounce.jar
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
