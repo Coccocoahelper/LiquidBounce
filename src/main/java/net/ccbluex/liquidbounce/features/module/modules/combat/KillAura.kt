@@ -1251,7 +1251,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R) {
                     serverRotation.lerpWith(currentRotation ?: player.rotation, mc.timer.renderPartialTicks)
                 ) * player.getDistanceToEntityBox(target).coerceAtMost(range.toDouble())
 
-                val offSetBox = box.offset((rotationVec - renderManager.renderPos) - f)
+                val offSetBox = box.offset(rotationVec - renderManager.renderPos)
 
                 RenderUtils.drawAxisAlignedBB(offSetBox, aimPointBoxColor)
             }
