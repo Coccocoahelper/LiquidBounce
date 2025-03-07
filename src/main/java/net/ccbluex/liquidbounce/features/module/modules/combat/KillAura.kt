@@ -52,6 +52,7 @@ import net.ccbluex.liquidbounce.utils.rotation.RotationUtils.toRotation
 import net.ccbluex.liquidbounce.utils.simulation.SimulatedPlayer
 import net.ccbluex.liquidbounce.utils.timing.MSTimer
 import net.ccbluex.liquidbounce.utils.timing.TickedActions.nextTick
+import net.ccbluex.liquidbounce.utils.timing.TimeUtils.randomDelay
 import net.ccbluex.liquidbounce.utils.timing.TimeUtils.randomClickDelay
 import net.minecraft.client.gui.inventory.GuiContainer
 import net.minecraft.enchantment.EnchantmentHelper
@@ -253,7 +254,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R) {
     private val fov by float("FOV", 180f, 0f..180f)
 
     // Prediction
-    private val predictClientMovement by int("PredictClientMovement", 2, 0..5)
+    private val predictClientMovement by intRange("PredictClientMovement", 1..2, 0..5)
     private val predictOnlyWhenOutOfRange by boolean(
         "PredictOnlyWhenOutOfRange", false
     ) { predictClientMovement != 0 }
@@ -276,9 +277,9 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R) {
     private val ticksLateToSwing by int(
         "TicksLateToSwing", 4, 0..20
     ) { swing && failSwing && swingWhenTicksLate.isActive() && options.rotationsActive }
-    private val renderBoxOnSwingFail by boolean("RenderBoxOnSwingFail", false) { failSwing }
-    private val renderBoxColor = ColorSettingsInteger(this, "RenderBoxColor") { renderBoxOnSwingFail }.with(Color.CYAN)
-    private val renderBoxFadeSeconds by float("RenderBoxFadeSeconds", 1f, 0f..5f) { renderBoxOnSwingFail }
+    private val renderBoxOnSwingFail by boolean("RenderBoxOnSwingFail", false) { failSwing }.subjective()
+    private val renderBoxColor = ColorSettingsInteger(this, "RenderBoxColor") { renderBoxOnSwingFail }.with(Color.CYAN).subjective()
+    private val renderBoxFadeSeconds by float("RenderBoxFadeSeconds", 1f, 0f..5f) { renderBoxOnSwingFail }.subjective()
 
     // Inventory
     private val simulateClosingInventory by boolean("SimulateClosingInventory", false) { !noInventoryAttack }
@@ -880,7 +881,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R) {
 
         var pos = currPos
 
-        repeat(predictClientMovement) {
+        repeat(randomClickDelay(predictClientMovement.first, predictClientMovement.last)) {
             val previousPos = simPlayer.pos
 
             simPlayer.tick()
