@@ -881,7 +881,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R) {
 
         var pos = currPos
 
-        repeat(randomClickDelay(predictClientMovement.first, predictClientMovement.last)) {
+        repeat(randomDelay(predictClientMovement.first, predictClientMovement.last - 1)) {
             val previousPos = simPlayer.pos
 
             simPlayer.tick()
