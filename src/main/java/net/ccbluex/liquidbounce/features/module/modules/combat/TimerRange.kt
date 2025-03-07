@@ -21,6 +21,7 @@ import net.ccbluex.liquidbounce.utils.extensions.*
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawEntityBox
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawPlatform
 import net.ccbluex.liquidbounce.utils.rotation.RotationUtils.searchCenter
+import net.ccbluex.liquidbounce.utils.timing.TimeUtils.randomDelay
 import net.ccbluex.liquidbounce.utils.simulation.SimulatedPlayer
 import net.minecraft.entity.Entity
 import net.minecraft.entity.EntityLivingBase
@@ -83,7 +84,7 @@ object TimerRange : Module("TimerRange", Category.COMBAT) {
     private val blink by boolean("Blink", false)
 
     // Prediction Settings
-    private val predictClientMovement by int("PredictClientMovement", 2, 0..5)
+    private val predictClientMovement by intRange("PredictClientMovement", 1..2, 0..5)
     private val predictEnemyPosition by float("PredictEnemyPosition", 1.5f, -1f..2f)
 
     private val maxAngleDifference by float("MaxAngleDifference", 5f, 5f..90f) { timerBoostMode == "Modern" }
@@ -228,7 +229,7 @@ object TimerRange : Module("TimerRange", Category.COMBAT) {
 
         val simPlayer = SimulatedPlayer.fromClientPlayer(player.movementInput)
 
-        repeat(predictClientMovement + 1) {
+        repeat(randomDelay(predictClientMovement.first + 1, predictClientMovement.last)) {
             simPlayer.tick()
         }
 
